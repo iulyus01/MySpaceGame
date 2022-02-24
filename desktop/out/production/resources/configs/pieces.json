@@ -1,0 +1,48 @@
+[
+    {
+        "id": 0,
+        "name": "core1x1",
+        "width": 1,
+        "height": 1,
+        "vertices": [
+            0.5, -0.5,
+            0.5, 0.5,
+            -0.5, 0.5,
+            -0.5, -0.5,
+            0.5, -0.5
+        ],
+        "startIndices": [
+            0, 2, 4, 6
+        ],
+        "endIndices": [
+            2, 4, 6, 0
+        ],
+        "posRate": [
+            0.5, 0.5, 0.5, 0.5
+        ],
+        "texture": "core.png"
+    },
+    {
+        "id": 1,
+        "name": "hull1x1",
+        "width": 1,
+        "height": 1,
+        "vertices": [
+            0.5, -0.5,
+            0.5, 0.5,
+            -0.5, 0.5,
+            -0.5, -0.5,
+            0.5, -0.5
+        ],
+        "startIndices": [
+            0, 2, 4, 6
+        ],
+        "endIndices": [
+            2, 4, 6, 0
+        ],
+        "posRate": [
+            0.5, 0.5, 0.5, 0.5
+        ],
+        "texture": "hull0.png"
+    }
+]
