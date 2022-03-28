@@ -13,7 +13,7 @@ import com.myspacegame.components.pieces.PieceComponent;
 
 public class PhysicsSystem extends IteratingSystem {
 
-    private static final float MAX_STEP_TIME = 1 / 45f;
+    private static final float MAX_STEP_TIME = 1 / 60f;
     private static float accumulator = 0f;
 
     private final ComponentMapper<PieceComponent> pieceMapper;

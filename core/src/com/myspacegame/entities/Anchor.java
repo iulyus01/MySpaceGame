@@ -4,9 +4,7 @@ import com.badlogic.gdx.math.Vector2;
 
 public class Anchor {
     public int edgeIndex;
-    public int startVertex;
-    public int endVertex;
-    public float posRate;
+    public int edgeAnchorIndex;
     public final Vector2 pos;
     public Piece piece = null;
     public final Piece srcPiece;
@@ -16,12 +14,10 @@ public class Anchor {
         this.srcPiece = srcPiece;
     }
 
-    public Anchor(int edgeIndex, int startVertex, int endVertex, float posRate, Piece nextPiece, Piece srcPiece) {
+    public Anchor(int edgeIndex, int edgeAnchorIndex, Piece destPiece, Piece srcPiece) {
         this.edgeIndex = edgeIndex;
-        this.startVertex = startVertex;
-        this.endVertex = endVertex;
-        this.posRate = posRate;
-        this.piece = nextPiece;
+        this.edgeAnchorIndex = edgeAnchorIndex;
+        this.piece = destPiece;
         this.srcPiece = srcPiece;
         pos = new Vector2();
 

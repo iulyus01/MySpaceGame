@@ -18,6 +18,8 @@ import com.myspacegame.components.TransformComponent;
 import com.myspacegame.components.pieces.PieceComponent;
 import com.myspacegame.entities.Anchor;
 import com.myspacegame.entities.Piece;
+import com.myspacegame.entities.ThrusterPiece;
+import com.myspacegame.utils.PieceEdge;
 
 public class RenderingBuildingSystem extends IteratingSystem {
 
@@ -49,8 +51,6 @@ public class RenderingBuildingSystem extends IteratingSystem {
     @Override
     public void update(float deltaTime) {
         super.update(deltaTime);
-
-        batch.end();
     }
 
     @Override
@@ -66,24 +66,34 @@ public class RenderingBuildingSystem extends IteratingSystem {
         if(Math.abs(pieceComponent.fixtureCenter.x - Info.mouseWorldX) > Info.blockSize * 20 || Math.abs(pieceComponent.fixtureCenter.y - Info.mouseWorldY) > Info.blockSize * 20) return;
 
 
+        Piece piece = pieceComponent.piece;
+        Anchor anchor;
         for(int i = 0; i < pieceComponent.piece.anchors.size; i++) {
-            Anchor a = pieceComponent.piece.anchors.get(i);
-            Piece piece = pieceComponent.piece;
-            if(pieceComponent.piece.anchors.get(i).piece != null) continue;
+            anchor = pieceComponent.piece.anchors.get(i);
+
+            if(piece.anchors.get(i).piece != null) continue;
             Transform trf = pieceComponent.fixture.getBody().getTransform();
 
-            a.pos.x = piece.shape.getVertices()[a.startVertex] + a.posRate * (piece.shape.getVertices()[a.endVertex] - piece.shape.getVertices()[a.startVertex]);
-            a.pos.y = piece.shape.getVertices()[a.startVertex + 1] + a.posRate * (piece.shape.getVertices()[a.endVertex + 1] - piece.shape.getVertices()[a.startVertex + 1]);
+            // get anchor pos relative to piece
+            PieceEdge edge = piece.edges.get(anchor.edgeIndex);
+            anchor.pos.x = edge.x1 + edge.anchorRatios.get(anchor.edgeAnchorIndex) * (edge.x2 - edge.x1);
+            anchor.pos.y = edge.y1 + edge.anchorRatios.get(anchor.edgeAnchorIndex) * (edge.y2 - edge.y1);
 
-            a.pos.x += piece.pos.x * Info.blockSize;
-            a.pos.y += piece.pos.y * Info.blockSize;
-            trf.mul(a.pos);
+            // rotate anchor by piece rotation
+            if(piece instanceof ThrusterPiece) {
+                anchor.pos.rotateRad(piece.rotation * Info.rad90Deg);
+            }
+
+            // change anchor pos relative to ship
+            anchor.pos.x += piece.pos.x * Info.blockSize;
+            anchor.pos.y += piece.pos.y * Info.blockSize;
+            trf.mul(anchor.pos);
 
             float scaleX = transformComponent.scale.x / piece.W * Info.blockSize;
             float scaleY = transformComponent.scale.y / piece.H * Info.blockSize;
 
             batch.draw(anchorTexture,
-                    a.pos.x - originX, a.pos.y - originY,
+                    anchor.pos.x - originX, anchor.pos.y - originY,
                     originX, originY,
                     width, height,
                     scaleX, scaleY,

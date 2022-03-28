@@ -6,16 +6,16 @@ import com.myspacegame.Info;
 public class ThrusterPiece extends Piece {
 
     public Info.Key activateKey;
-    public int angleRad;
+    public int angleDirection;
 
-    public ThrusterPiece(Piece piece, int angleRad) {
+    public ThrusterPiece(Piece piece, int angleDirection) {
         super(piece);
-        this.angleRad = angleRad;
+        this.angleDirection = angleDirection;
     }
 
-    public ThrusterPiece(int x, int y, int width, int height, int angleRad, Info.Key activateKey) {
+    public ThrusterPiece(int x, int y, int width, int height, int angleDirection, Info.Key activateKey) {
         super(x, y, width, height, false);
-        this.angleRad = angleRad;
+        this.angleDirection = angleDirection;
         this.activateKey = activateKey;
 
         anchors = new Array<>(false, 1, Info.Pair.class);

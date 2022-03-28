@@ -4,7 +4,9 @@ import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
@@ -15,6 +17,7 @@ import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.*;
 import com.myspacegame.entities.Anchor;
 import com.myspacegame.entities.Piece;
+import com.myspacegame.factories.BodyFactory;
 import com.myspacegame.factories.EntitiesFactory;
 import com.myspacegame.factories.ShapeRenderingDebug;
 import com.myspacegame.factories.WorldFactory;
@@ -28,7 +31,9 @@ public class BuildingSystem extends IteratingSystem {
     private final ComponentMapper<PlayerComponent> playerMapper;
     private final KeyboardController controller;
     private final EntitiesFactory entitiesFactory;
+    private final BodyFactory bodyFactory;
     private final Engine engine;
+    private final World world;
 
     private final ShipComponent playerShip;
     private final Body playerShipBody;
@@ -38,8 +43,6 @@ public class BuildingSystem extends IteratingSystem {
     private Entity draggingEntity = null;
     private Fixture draggedFixture = null;
     private short draggingFixtureMask = 0;
-    private final Vector2 draggingPointOfPieceFromCenter;
-    private final Vector2 pieceDistanceDunnoWhatThisIsFor;
     private final Array<Info.Pair<Anchor, Anchor>> toAttachAnchors;
 
     private final TextureRegion hoverTexture;
@@ -55,12 +58,11 @@ public class BuildingSystem extends IteratingSystem {
         playerMapper = ComponentMapper.getFor(PlayerComponent.class);
         controller = keyboardController;
 
-        World world = WorldFactory.getInstance(game, engine).getWorld();
+        world = WorldFactory.getInstance(game, engine).getWorld();
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
+        bodyFactory = BodyFactory.getInstance(world);
 
         hoverTexture = new TextureRegion(game.assetManager.get("images/hover.png", Texture.class));
-        draggingPointOfPieceFromCenter = new Vector2();
-        pieceDistanceDunnoWhatThisIsFor = new Vector2();
         toAttachAnchors = new Array<>(false, 20, Info.Pair.class);
 
         Entity playerEntity = engine.getEntitiesFor(Family.all(PlayerComponent.class, ShipComponent.class, PieceComponent.class).get()).first();
@@ -74,8 +76,12 @@ public class BuildingSystem extends IteratingSystem {
         super.update(deltaTime);
 
         if(controller.isDragged) {
+            if(isDraggingPieceBegin) {
+                draggingPieceBegin();
+                isDraggingPiece = true;
+                isDraggingPieceBegin = false;
+            }
             if(isDraggingPiece) {
-                if(isDraggingPieceBegin) draggingPieceBegin();
                 draggingPieceUpdate();
             }
         } else {
@@ -105,7 +111,6 @@ public class BuildingSystem extends IteratingSystem {
             if(pieceComponent.fixture.testPoint(Info.mouseWorldX, Info.mouseWorldY)) {
                 textureComponent.overlayTexture = hoverTexture;
                 if(controller.isDragged) {
-                    isDraggingPiece = true;
                     isDraggingPieceBegin = true;
                     draggingEntity = entity;
                     draggedFixture = pieceComponent.fixture;
@@ -121,63 +126,39 @@ public class BuildingSystem extends IteratingSystem {
     }
 
     private void draggingPieceBegin() {
-        draggingEntity.add(engine.createComponent(DraggingComponent.class));
+        DraggingComponent draggingComponent = engine.createComponent(DraggingComponent.class);
+        draggingComponent.playerShipAngleRad = playerShipBody.getAngle();
+        draggingComponent.first = true;
+        draggingEntity.add(draggingComponent);
         draggingFixtureMask = draggedFixture.getFilterData().maskBits;
         draggedFixture.getFilterData().maskBits = Info.MASK_NOTHING;
-        draggedFixture.getBody().setLinearVelocity(0, 0);
-        draggedFixture.getBody().setAngularVelocity(0);
-        isDraggingPieceBegin = false;
 
         ShipComponent shipComponent = shipMapper.get(draggingEntity);
         PieceComponent pieceComponent = pieceMapper.get(draggingEntity);
         TransformComponent transformComponent = transformMapper.get(draggingEntity);
         if(shipComponent != null) {
-            entitiesFactory.detachPiece(draggingEntity, shipComponent, pieceComponent, draggingPointOfPieceFromCenter);
-            draggedFixture = pieceComponent.fixture;
+            pieceComponent.isManuallyDetached = true;
             transformComponent.position.z = Info.ZOrder.PIECE_DRAG.getValue();
-            // starting here the shipComponent should be null... or just not usable
+            draggedFixture = pieceComponent.fixture;
         }
-
-        draggingPointOfPieceFromCenter.x = Info.mouseWorldX - pieceComponent.fixtureCenter.x;
-        draggingPointOfPieceFromCenter.y = Info.mouseWorldY - pieceComponent.fixtureCenter.y;
-
-        float draggingPointAngleFromBottomLeftRad = MathUtils.atan2(draggingPointOfPieceFromCenter.y, draggingPointOfPieceFromCenter.x) - draggedFixture.getBody().getAngle();
-        float draggingPointDistFromBottomLeft = (float) Math.sqrt(draggingPointOfPieceFromCenter.x * draggingPointOfPieceFromCenter.x + draggingPointOfPieceFromCenter.y * draggingPointOfPieceFromCenter.y);
-        float angleToComputePiecePosOffset = playerShipBody.getAngle() + draggingPointAngleFromBottomLeftRad + Info.rad90Deg * 2;
-        draggedFixture.getBody().setTransform(draggedFixture.getBody().getPosition(), playerShipBody.getAngle());
-        draggedFixture.getBody().setTransform(
-                pieceComponent.fixtureCenter.x + draggingPointOfPieceFromCenter.x + MathUtils.cos(angleToComputePiecePosOffset) * draggingPointDistFromBottomLeft,
-                pieceComponent.fixtureCenter.y + draggingPointOfPieceFromCenter.y + MathUtils.sin(angleToComputePiecePosOffset) * draggingPointDistFromBottomLeft,
-                draggedFixture.getBody().getAngle());
-
-
-        draggingPointOfPieceFromCenter.x = Info.mouseWorldX - pieceComponent.fixtureCenter.x;
-        draggingPointOfPieceFromCenter.y = Info.mouseWorldY - pieceComponent.fixtureCenter.y;
-
-
-        float angle = pieceComponent.fixture.getBody().getAngle();
-        pieceDistanceDunnoWhatThisIsFor.x = (float) (Math.cos(angle) * Info.blockSize);
-        pieceDistanceDunnoWhatThisIsFor.y = (float) (Math.sin(angle) * Info.blockSize);
-
-
     }
 
     private void draggingPieceUpdate() {
-        float newBodyX = Info.mouseWorldX - draggingPointOfPieceFromCenter.x;
-        float newBodyY = Info.mouseWorldY - draggingPointOfPieceFromCenter.y;
-        draggedFixture.getBody().setTransform(newBodyX, newBodyY, draggedFixture.getBody().getAngle());
-
         PieceComponent pieceComponent = pieceMapper.get(draggingEntity);
+
         Piece draggedPiece = pieceComponent.piece;
 
+        // idea
         // the body(fixture) won't fix itself, but another entity used as a piece ghost will be fixed
         // maybe
+        // i'll just draw lines...
         toAttachAnchors.clear();
         for(Piece shipPiece : playerShip.piecesArray) {
             if(shipPiece == null) continue;
             if(shipPiece.pieceComponent.fixtureCenter.dst2(pieceComponent.fixtureCenter) > (Info.maxPieceSize * Info.maxPieceSize + Info.blockSize)) continue;
 
-            for(Anchor shipPieceAnchor : shipPiece.anchors) {
+            for(int i = 0; i < shipPiece.anchors.size; i++) {
+                Anchor shipPieceAnchor = shipPiece.anchors.get(i);
                 if(shipPieceAnchor == null) continue;
                 for(Anchor draggedPieceAnchor : draggedPiece.anchors) {
 
@@ -210,14 +191,83 @@ public class BuildingSystem extends IteratingSystem {
         if(toAttachAnchors.size > 0) {
             PieceComponent pieceComponent = pieceMapper.get(draggingEntity);
 
-            entitiesFactory.adjustAttachAnchors(playerShip, pieceComponent, toAttachAnchors);
+            buildingAdjustAttachAnchors(playerShip, pieceComponent, toAttachAnchors);
             if(toAttachAnchors.size > 0) {
-                entitiesFactory.attachPiece(draggingEntity, playerShip, playerShipBody, pieceComponent, toAttachAnchors);
+                buildingAttachPiece(draggingEntity, playerShip, playerShipBody, pieceComponent, toAttachAnchors);
             }
         }
 
-
         isDraggingPiece = false;
+    }
+
+
+    public void buildingAdjustAttachAnchors(ShipComponent playerShip, PieceComponent pieceComponent, Array<Info.Pair<Anchor, Anchor>> toAttachAnchors) {
+        float maxDistanceCheck2 = Info.maxPieceSize * Info.maxPieceSize * 2.25f;
+
+        for(int i = 0; i < toAttachAnchors.size; i++) {
+            boolean overlaps;
+            var pair = toAttachAnchors.get(i);
+            Anchor shipAnchor = pair.first;
+            Anchor pieceAnchor = pair.second;
+
+            float offsetX = shipAnchor.pos.x - pieceAnchor.pos.x;
+            float offsetY = shipAnchor.pos.y - pieceAnchor.pos.y;
+
+            float[] pieceVertices = pieceComponent.piece.shape.getVertices();
+            Polygon piecePolygon = new Polygon(pieceVertices);
+            piecePolygon.setRotation(pieceComponent.fixture.getBody().getAngle() * MathUtils.radDeg);
+            piecePolygon.setPosition(pieceComponent.fixtureCenter.x + offsetX, pieceComponent.fixtureCenter.y + offsetY);
+            piecePolygon.setScale(.9f, .9f);
+            ShapeRenderingDebug.addToDrawWithId(() -> ShapeRenderingDebug.drawDebugPolygon(piecePolygon.getTransformedVertices()), 2, 2000);
+
+            for(Piece shipPiece : playerShip.piecesArray) {
+                if(shipPiece.pieceComponent.fixtureCenter.dst2(pieceComponent.fixtureCenter) > maxDistanceCheck2) continue;
+                float[] vertices = shipPiece.shape.getVertices();
+                Polygon polygon = new Polygon(vertices);
+                polygon.setPosition(shipPiece.pieceComponent.fixtureCenter.x, shipPiece.pieceComponent.fixtureCenter.y);
+                polygon.setRotation(piecePolygon.getRotation());
+
+                overlaps = Intersector.overlapConvexPolygons(piecePolygon.getTransformedVertices(), polygon.getTransformedVertices(), null);
+                if(overlaps) {
+                    ShapeRenderingDebug.addToDrawWithId(() -> ShapeRenderingDebug.drawDebugPolygon(polygon.getTransformedVertices()), 3, 2000);
+                    toAttachAnchors.removeIndex(i);
+                    i--;
+                    break;
+                }
+            }
+        }
+    }
+
+    public void buildingAttachPiece(Entity entity, ShipComponent shipComponent, Body shipBody, PieceComponent pieceComponent, Array<Info.Pair<Anchor, Anchor>> attachAnchors) {
+        if(shipBody == null) return;
+
+        Piece piece = pieceComponent.piece;
+        piece.actorId = shipComponent.piecesArray.get(0).actorId;
+        Anchor shipAnchor = attachAnchors.first().first;
+        Anchor pieceAnchor = attachAnchors.first().second;
+
+        float offsetX = shipAnchor.pos.x - pieceAnchor.pos.x;
+        float offsetY = shipAnchor.pos.y - pieceAnchor.pos.y;
+
+        shipComponent.piecesArray.add(piece);
+
+        piece.pos.x = Math.round(((pieceComponent.fixtureCenter.x + offsetX - shipComponent.core.pieceComponent.fixtureCenter.x) / Info.blockSize) * 2) / 2f;
+        piece.pos.y = Math.round(((pieceComponent.fixtureCenter.y + offsetY - shipComponent.core.pieceComponent.fixtureCenter.y) / Info.blockSize) * 2) / 2f;
+
+        for(var pair : attachAnchors) {
+            pair.first.piece = piece;
+            pair.second.piece = pair.first.srcPiece;
+        }
+
+        Body pieceBody = pieceComponent.fixture.getBody();
+
+        pieceComponent.fixture.getBody().destroyFixture(pieceComponent.fixture);
+        pieceComponent.fixture = bodyFactory.createPieceFixture(shipBody, piece, entity);
+        world.destroyBody(pieceBody);
+
+        entity.add(engine.createComponent(PlayerComponent.class));
+        entity.add(shipComponent);
+
     }
 
 }

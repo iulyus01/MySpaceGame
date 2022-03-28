@@ -5,11 +5,14 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.myspacegame.Info;
 import com.myspacegame.components.pieces.PieceComponent;
+import com.myspacegame.utils.PieceEdge;
 
 public class Piece {
 
     /*
     list containing
+        - actorId - id of npc or player, -1 is neutral
+        - pieceConfigId - id from configs.json
         - width and height or piece
         - position of piece - integer
             - only one position - center of piece - i guess it becomes float
@@ -35,32 +38,19 @@ public class Piece {
         -
 
     */
-
+    public int actorId = -1;
     public int pieceConfigId = 0;
     public float W = 0;
     public float H = 0;
-    public Vector2 pos;
+    public float hp = 5;
+    public int rotation = 0;
+    public Vector2 pos = null;
     public Polygon shape;
+    public Array<PieceEdge> edges;
     public Array<Anchor> anchors;
-
-//    public Array<Piece> newAnchors;
-    public PieceComponent newPieceComponent;
-
-
-
-
-
-
-    // these are used in the matrix
-//    public int x;
-//    public int y;
-//    public int width;
-//    public int height;
-//    public Array<Info.Pair<Info.Anchor, Boolean>> anchors; // x - matrix(width X height) x, y - matrix y, z - right top left bottom
-//    public final float angleToCenterRad; // 45deg
-//    public final float diagonalLength;
-
     public PieceComponent pieceComponent;
+
+    public int checked = 0;
 
 
     public Piece() {
@@ -68,13 +58,13 @@ public class Piece {
     }
 
     public Piece(Piece piece) {
-//        this.x = piece.x;
-//        this.y = piece.y;
-//        this.width = piece.width;
-//        this.height = piece.height;
+        this.pieceConfigId = piece.pieceConfigId;
+        this.W = piece.W;
+        this.H = piece.H;
+        this.pos = new Vector2(piece.pos);
+        this.shape = new Polygon(piece.shape.getVertices().clone());
+        // TODO not sure if this case exists, where the anchors and PieceComponent are the same
         this.anchors = piece.anchors;
-//        this.angleToCenterRad = piece.angleToCenterRad;
-//        this.diagonalLength = piece.diagonalLength;
         this.pieceComponent = piece.pieceComponent;
     }
 

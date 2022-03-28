@@ -41,10 +41,18 @@ public class BulletSystem extends IteratingSystem {
 
         // bullet life
         if(bulletComponent.lifeDelta >= bulletComponent.maxLifeDelta) {
-            body.destroyFixture(body.getFixtureList().get(0));
-            world.destroyBody(body);
-            engine.removeEntity(entity);
+            bulletComponent.isDead = true;
         }
+
+        if(bulletComponent.isDead) {
+            destroyBullet(entity, body);
+        }
+    }
+
+    private void destroyBullet(Entity entity, Body body) {
+        body.destroyFixture(body.getFixtureList().get(0));
+        world.destroyBody(body);
+        engine.removeEntity(entity);
     }
 
 }

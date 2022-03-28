@@ -15,23 +15,34 @@ public class B2dContactListener implements ContactListener {
 
     @Override
     public void beginContact(Contact contact) {
-        System.out.println("Contact");
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
-        System.out.println(fixtureA.getBody().getType() + " has hit " + fixtureB.getBody().getType());
 
-        if(fixtureA.getBody().getUserData() instanceof Entity) {
-            Entity entity = (Entity) fixtureA.getBody().getUserData();
+        if(fixtureA.getUserData() instanceof Entity) {
+            Entity entity = (Entity) fixtureA.getUserData();
             entityCollision(entity, fixtureB);
-        } else if(fixtureB.getBody().getUserData() instanceof Entity) {
-            Entity entity = (Entity) fixtureB.getBody().getUserData();
+        } else if(fixtureB.getUserData() instanceof Entity) {
+            Entity entity = (Entity) fixtureB.getUserData();
             entityCollision(entity, fixtureA);
         }
     }
 
+    @Override
+    public void endContact(Contact contact) {
+
+    }
+
+    @Override
+    public void preSolve(Contact contact, Manifold oldManifold) {
+    }
+
+    @Override
+    public void postSolve(Contact contact, ContactImpulse impulse) {
+    }
+
     private void entityCollision(Entity entityA, Fixture fixtureB) {
-        if(fixtureB.getBody().getUserData() instanceof Entity) {
-            Entity entityB = (Entity) fixtureB.getBody().getUserData();
+        if(fixtureB.getUserData() instanceof Entity) {
+            Entity entityB = (Entity) fixtureB.getUserData();
 
             CollisionComponent collisionA = entityA.getComponent(CollisionComponent.class);
             CollisionComponent collisionB = entityB.getComponent(CollisionComponent.class);
@@ -42,19 +53,6 @@ public class B2dContactListener implements ContactListener {
                 collisionB.collisionEntity = entityA;
             }
         }
-    }
-
-    @Override
-    public void endContact(Contact contact) {
-        System.out.println("Contact end");
-    }
-
-    @Override
-    public void preSolve(Contact contact, Manifold oldManifold) {
-    }
-
-    @Override
-    public void postSolve(Contact contact, ContactImpulse impulse) {
     }
 
 }

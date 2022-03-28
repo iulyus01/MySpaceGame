@@ -13,10 +13,13 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.myspacegame.Info;
 import com.myspacegame.MainClass;
 import com.myspacegame.ui.UIStyles;
+import com.myspacegame.utils.PieceConfig;
+import com.myspacegame.utils.PieceEdge;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -176,20 +179,21 @@ public class LoadingScreen implements Screen {
         JSONParser jsonParser = new JSONParser();
 
         try {
-            FileHandle handle = Gdx.files.local("configs/pieces.json");
+            FileHandle handle = Gdx.files.local("configs/pieces1.json");
             Object obj = jsonParser.parse(handle.readString());
 
             JSONArray pieceListJsonArray = (JSONArray) obj;
 
             Info.pieceConfigsMap = new HashMap<>();
-            for(Object o : pieceListJsonArray) parseEmployeeObject((JSONObject) o);
+//            for(Object o : pieceListJsonArray) parsePieceConfigsObject((JSONObject) o);
+            for(Object o : pieceListJsonArray) parsePieceConfigsObjectNew((JSONObject) o);
 
         } catch(ParseException e) {
             e.printStackTrace();
         }
     }
 
-    private static void parseEmployeeObject(JSONObject piece) {
+    private static void parsePieceConfigsObject(JSONObject piece) {
         int id = (int) (long) piece.get("id");
         String name = (String) piece.get("name");
         int width = (int) (long) piece.get("width");
@@ -212,20 +216,55 @@ public class LoadingScreen implements Screen {
         JSONArray posRatioListJArray = (JSONArray) piece.get("posRatio");
         for(Object v : posRatioListJArray) posRatioList.add((float) (double) v);
 
-        Info.PieceConfig pieceConfig = new Info.PieceConfig();
+        PieceConfig pieceConfig = new PieceConfig();
         pieceConfig.id = id;
         pieceConfig.name = name;
         pieceConfig.width = width;
         pieceConfig.height = height;
         pieceConfig.textureName = textureName;
-        pieceConfig.vertices = new float[vertices.size()];
-        for(int i = 0; i < vertices.size(); i++) pieceConfig.vertices[i] = vertices.get(i);
-        pieceConfig.startIndices = new int[startIndices.size()];
-        for(int i = 0; i < startIndices.size(); i++) pieceConfig.startIndices[i] = startIndices.get(i);
-        pieceConfig.endIndices = new int[endIndices.size()];
-        for(int i = 0; i < endIndices.size(); i++) pieceConfig.endIndices[i] = endIndices.get(i);
-        pieceConfig.posRatioList = new float[posRatioList.size()];
-        for(int i = 0; i < posRatioList.size(); i++) pieceConfig.posRatioList[i] = posRatioList.get(i);
+//        pieceConfig.vertices = new float[vertices.size()];
+//        for(int i = 0; i < vertices.size(); i++) pieceConfig.vertices[i] = vertices.get(i);
+//        pieceConfig.startIndices = new int[startIndices.size()];
+//        for(int i = 0; i < startIndices.size(); i++) pieceConfig.startIndices[i] = startIndices.get(i);
+//        pieceConfig.endIndices = new int[endIndices.size()];
+//        for(int i = 0; i < endIndices.size(); i++) pieceConfig.endIndices[i] = endIndices.get(i);
+//        pieceConfig.posRatioList = new float[posRatioList.size()];
+//        for(int i = 0; i < posRatioList.size(); i++) pieceConfig.posRatioList[i] = posRatioList.get(i);
+
+        Info.pieceConfigsMap.put(id, pieceConfig);
+    }
+
+    private static void parsePieceConfigsObjectNew(JSONObject piece) {
+        int id = (int) (long) piece.get("id");
+        String name = (String) piece.get("name");
+        int width = (int) (long) piece.get("width");
+        int height = (int) (long) piece.get("height");
+        String textureName = (String) piece.get("texture");
+
+        List<PieceEdge> edges = new ArrayList<>();
+        JSONArray edgesJSONArray = (JSONArray) piece.get("edges");
+        for(Object edge : edgesJSONArray) {
+            PieceEdge pieceEdge = new PieceEdge();
+            pieceEdge.x1 = (float) (double) ((JSONObject) edge).get("x1");
+            pieceEdge.y1 = (float) (double) ((JSONObject) edge).get("y1");
+            pieceEdge.x2 = (float) (double) ((JSONObject) edge).get("x2");
+            pieceEdge.y2 = (float) (double) ((JSONObject) edge).get("y2");
+
+            JSONArray anchorsJSONArray = (JSONArray) ((JSONObject) edge).get("anchors");
+            pieceEdge.anchorRatios = new Array<>(true, anchorsJSONArray.size(), Float.class);
+            for(Object o : anchorsJSONArray) pieceEdge.anchorRatios.add((float) (double) o);
+
+            edges.add(pieceEdge);
+        }
+
+
+        PieceConfig pieceConfig = new PieceConfig();
+        pieceConfig.id = id;
+        pieceConfig.name = name;
+        pieceConfig.width = width;
+        pieceConfig.height = height;
+        pieceConfig.textureName = textureName;
+        pieceConfig.edges = edges;
 
         Info.pieceConfigsMap.put(id, pieceConfig);
     }

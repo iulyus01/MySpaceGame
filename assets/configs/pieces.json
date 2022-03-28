@@ -27,7 +27,7 @@
         "name": "hull1x1",
         "width": 1,
         "height": 1,
-        "texture": "hull0.png",
+        "texture": "hull.png",
         "vertices": [
             0.5, -0.5,
             0.5, 0.5,
@@ -50,7 +50,7 @@
         "name": "hull3x1",
         "width": 3,
         "height": 1,
-        "texture": "hull0.png",
+        "texture": "hull.png",
         "vertices": [
             1.5, -0.5,
             1.5, 0.5,
@@ -66,6 +66,52 @@
         ],
         "posRatio": [
             0.5, 0.166, 0.5, 0.833, 0.5, 0.166, 0.5, 0.833
+        ]
+    },
+    {
+        "id": 4,
+        "name": "thruster1x1",
+        "width": 1,
+        "height": 1,
+        "texture": "thruster.png",
+        "vertices": [
+            0.5, -0.5,
+            0.5, 0.5,
+            -0.5, 0.5,
+            -0.5, -0.5,
+            0.5, -0.5
+        ],
+        "startIndices": [
+            0
+        ],
+        "endIndices": [
+            2
+        ],
+        "posRatio": [
+            0.5
+        ]
+    },
+    {
+        "id": 5,
+        "name": "weapon1x1",
+        "width": 1,
+        "height": 1,
+        "texture": "hull.png",
+        "vertices": [
+            0.5, -0.5,
+            0.5, 0.5,
+            -0.5, 0.5,
+            -0.5, -0.5,
+            0.5, -0.5
+        ],
+        "startIndices": [
+            0
+        ],
+        "endIndices": [
+            2
+        ],
+        "posRatio": [
+            0.5
         ]
     }
 ]

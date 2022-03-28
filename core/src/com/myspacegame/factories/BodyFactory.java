@@ -1,8 +1,12 @@
 package com.myspacegame.factories;
 
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.physics.box2d.*;
 import com.myspacegame.Info;
+import com.myspacegame.components.BulletComponent;
+import com.myspacegame.components.pieces.PieceComponent;
 import com.myspacegame.entities.Piece;
+import com.myspacegame.entities.Projectile;
 
 public class BodyFactory {
 
@@ -25,15 +29,15 @@ public class BodyFactory {
                 fixtureDef.density = 10f;
                 fixtureDef.friction = 0.5f;
                 fixtureDef.restitution = 0f;
-                fixtureDef.filter.categoryBits = Info.CATEGORY_PIECE;
-                fixtureDef.filter.maskBits = Info.MASK_EVERYTHING;
+//                fixtureDef.filter.categoryBits = Info.CATEGORY_PIECE;
+//                fixtureDef.filter.maskBits = Info.MASK_EVERYTHING;
                 break;
             case BULLET:
                 fixtureDef.density = Info.defaultBulletDensity;
                 fixtureDef.friction = 0f;
                 fixtureDef.restitution = 0f;
-                fixtureDef.filter.categoryBits = Info.CATEGORY_BULLET;
-                fixtureDef.filter.maskBits = Info.MASK_NOTHING;
+//                fixtureDef.filter.categoryBits = Info.CATEGORY_BULLET;
+//                fixtureDef.filter.maskBits = Info.MASK_NOTHING;
                 break;
         }
         return fixtureDef;
@@ -65,7 +69,7 @@ public class BodyFactory {
         return world.createBody(bodyDef);
     }
 
-    public Body createBulletBody(float x, float y, float width, float height, float angleRad, float impulse) {
+    public Body createBulletBody(float x, float y, float width, float height, float angleRad, float impulse, Entity entity) {
         BodyDef bodyDef = initBodyDef(Info.EntityType.BULLET);
         bodyDef.position.x = x;
         bodyDef.position.y = y;
@@ -79,7 +83,8 @@ public class BodyFactory {
         FixtureDef fixtureDef = initFixtureDef(Info.EntityType.BULLET);
         fixtureDef.shape = shape;
         fixtureDef.isSensor = true;
-        body.createFixture(fixtureDef);
+        Fixture fixture = body.createFixture(fixtureDef);
+        fixture.setUserData(entity);
         shape.dispose();
 
         body.applyLinearImpulse(
@@ -91,7 +96,7 @@ public class BodyFactory {
         return body;
     }
 
-    public Fixture createPieceFixture(Body body, Piece piece) {
+    public Fixture createPieceFixture(Body body, Piece piece, Entity entity) {
         float[] vertices = new float[piece.shape.getVertices().length];
         for(int i = 0; i < piece.shape.getVertices().length;) {
             vertices[i] = piece.shape.getVertices()[i] + piece.pos.x * Info.blockSize;
@@ -106,6 +111,7 @@ public class BodyFactory {
         fixtureDef.shape = shape;
 
         Fixture fixture = body.createFixture(fixtureDef);
+        fixture.setUserData(entity);
 
         shape.dispose();
 

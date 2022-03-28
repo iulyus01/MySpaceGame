@@ -1,6 +1,7 @@
 libgdx
 stack overflow
 gamedev stack exchange
+something with regex
 
 https://github-wiki-see.page/m/libgdx/libgdx/wiki/Querying-and-Configuring-Graphics-%28monitors%2C-display-modes%2C-vsync%2C-display-cutouts%29
 https://www.gamedevelopment.blog/full-libgdx-game-tutorial-entities-ashley/

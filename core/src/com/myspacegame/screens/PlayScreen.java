@@ -31,8 +31,8 @@ public class PlayScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
 
         SpriteBatch batch = new SpriteBatch();
-        RenderingSystem renderingSystem = new RenderingSystem(game, batch, shapeRenderer);
-        camera = renderingSystem.getCamera();
+        RenderingBeginSystem renderingBeginSystem = new RenderingBeginSystem(batch, shapeRenderer);
+        camera = renderingBeginSystem.getCamera();
         keyboardController = new KeyboardController(camera);
 
         ui = new PlayScreenHUD(game, batch, new ShapeRenderer(), camera);
@@ -45,25 +45,29 @@ public class PlayScreen implements Screen {
         // physics system has to be before others, that's where the fixture center is computed
         engine.addSystem(new PhysicsSystem(worldFactory.getWorld()));
         // piece system sets transform position, so it needs to be after physics
-        engine.addSystem(new PieceSystem(engine));
-        engine.addSystem(renderingSystem);
-        // rendering building system has to be after rendering since it will draw as well
-        engine.addSystem(new RenderingBuildingSystem(game, batch));
+        engine.addSystem(new PieceSystem(game, engine));
+
+        engine.addSystem(new DraggingSystem());
         engine.addSystem(new PlayerControlSystem(keyboardController, game, engine, camera));
         engine.addSystem(new BulletSystem(game, engine));
         engine.addSystem(new BackgroundSystem(worldFactory.getWorld(), engine));
+        engine.addSystem(new CollisionSystem(game, engine));
 
-        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
+        // rendering
+        engine.addSystem(renderingBeginSystem);
+        engine.addSystem(new RenderingSystem(batch, shapeRenderer));
+        engine.addSystem(new RenderingRotatingSystem(batch));
+        engine.addSystem(new RenderingBuildingSystem(game, batch));
+        engine.addSystem(new RenderingEndSystem(batch, shapeRenderer));
+
+
+//        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
+
+
+
 
 //        engine.addSystem(new AnimationSystem());
-//        engine.addSystem(new PhysicsDebugSystem(lvlFactory.world, renderingSystem.getCamera()));
-//        engine.addSystem(new CollisionSystem());
 //        engine.addSystem(new EnemySystem());
-//        player = lvlFactory.createPlayer(atlas.findRegion("player"), camera);
-//        engine.addSystem(new WallSystem(player));
-//        engine.addSystem(new WaterFloorSystem(player));
-//        engine.addSystem(new BulletSystem(player));
-//        engine.addSystem(new LevelGenerationSystem(lvlFactory));
 
         mouseCoords = new Vector3();
 

@@ -23,6 +23,7 @@ public class WorldFactory {
 
         world = new World(new Vector2(0, 0), true);
         world.setContactListener(new B2dContactListener());
+        world.setContactFilter(new B2dContactFilter());
 
         BodyFactory bodyFactory = BodyFactory.getInstance(world);
         backgroundFactory = BackgroundFactory.getInstance(game, engine, world);
@@ -46,8 +47,11 @@ public class WorldFactory {
 //        for(Entity entity : playerEntities) engine.addEntity(entity);
 
 
-        List<Entity> playerEntities = entitiesFactory.createShip(Info.newNewShip1, 10, 10, true);
+        List<Entity> playerEntities = entitiesFactory.createShip(Info.newNewNewShip1, 10, 10, 0, true);
         for(Entity entity : playerEntities) engine.addEntity(entity);
+
+//        List<Entity> enemyEntities = entitiesFactory.createShip(Info.newNewShip1, 20, 10, 1, false);
+//        for(Entity entity : enemyEntities) engine.addEntity(entity);
 
 
 //        List<Entity> playerEntities = entitiesFactory.createShip(Info.shipSample1, 10, 10, true);
