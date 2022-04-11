@@ -40,7 +40,7 @@ public class LoadingScreen implements Screen {
     private float dotNr = 0;
     private final float dotNrMax = 5;
     private float loadingDelay;
-    private float loadingDelayMax = 1000;
+    private final float loadingDelayMax = 1000;
 
     public LoadingScreen(MainClass game) {
         this.game = game;
@@ -131,8 +131,13 @@ public class LoadingScreen implements Screen {
         game.assetManager.load("images/background/BackgroundDot2.png", Texture.class);
         game.assetManager.load("images/background/BackgroundDot3.png", Texture.class);
         game.assetManager.load("images/background/BackgroundDot4.png", Texture.class);
+        game.assetManager.load("images/background/SmallDot1.png", Texture.class);
+        game.assetManager.load("images/background/SmallDot2.png", Texture.class);
+        game.assetManager.load("images/background/SmallDot3.png", Texture.class);
+
         game.assetManager.load("images/pieces/core.png", Texture.class);
         game.assetManager.load("images/pieces/hull.png", Texture.class);
+        game.assetManager.load("images/pieces/hull3x1.png", Texture.class);
         game.assetManager.load("images/pieces/thruster.png", Texture.class);
         game.assetManager.load("images/pieces/gun.png", Texture.class);
         game.assetManager.load("images/bullet.png", Texture.class);
@@ -179,62 +184,23 @@ public class LoadingScreen implements Screen {
         JSONParser jsonParser = new JSONParser();
 
         try {
-            FileHandle handle = Gdx.files.local("configs/pieces1.json");
-            Object obj = jsonParser.parse(handle.readString());
-
-            JSONArray pieceListJsonArray = (JSONArray) obj;
+            FileHandle piecesConfig = Gdx.files.local("configs/pieces.json");
+            FileHandle shipsConfig = Gdx.files.local("configs/ships.json");
+            Object obj = jsonParser.parse(piecesConfig.readString());
+            JSONArray jsonArray = (JSONArray) obj;
 
             Info.pieceConfigsMap = new HashMap<>();
-//            for(Object o : pieceListJsonArray) parsePieceConfigsObject((JSONObject) o);
-            for(Object o : pieceListJsonArray) parsePieceConfigsObjectNew((JSONObject) o);
+            for(Object o : jsonArray) parsePieceConfigsObject((JSONObject) o);
 
+            obj = jsonParser.parse(shipsConfig.readString());
+            jsonArray = (JSONArray) obj;
+            loadShips(jsonArray);
         } catch(ParseException e) {
             e.printStackTrace();
         }
     }
 
-    private static void parsePieceConfigsObject(JSONObject piece) {
-        int id = (int) (long) piece.get("id");
-        String name = (String) piece.get("name");
-        int width = (int) (long) piece.get("width");
-        int height = (int) (long) piece.get("height");
-        String textureName = (String) piece.get("texture");
-
-        List<Float> vertices = new ArrayList<>();
-        JSONArray verticesJArray = (JSONArray) piece.get("vertices");
-        for(Object v : verticesJArray) vertices.add((float) (double) v);
-
-        List<Integer> startIndices = new ArrayList<>();
-        JSONArray startIndicesJArray = (JSONArray) piece.get("startIndices");
-        for(Object v : startIndicesJArray) startIndices.add((int) (long) v);
-
-        List<Integer> endIndices = new ArrayList<>();
-        JSONArray endIndicesJArray = (JSONArray) piece.get("endIndices");
-        for(Object v : endIndicesJArray) endIndices.add((int) (long) v);
-
-        List<Float> posRatioList = new ArrayList<>();
-        JSONArray posRatioListJArray = (JSONArray) piece.get("posRatio");
-        for(Object v : posRatioListJArray) posRatioList.add((float) (double) v);
-
-        PieceConfig pieceConfig = new PieceConfig();
-        pieceConfig.id = id;
-        pieceConfig.name = name;
-        pieceConfig.width = width;
-        pieceConfig.height = height;
-        pieceConfig.textureName = textureName;
-//        pieceConfig.vertices = new float[vertices.size()];
-//        for(int i = 0; i < vertices.size(); i++) pieceConfig.vertices[i] = vertices.get(i);
-//        pieceConfig.startIndices = new int[startIndices.size()];
-//        for(int i = 0; i < startIndices.size(); i++) pieceConfig.startIndices[i] = startIndices.get(i);
-//        pieceConfig.endIndices = new int[endIndices.size()];
-//        for(int i = 0; i < endIndices.size(); i++) pieceConfig.endIndices[i] = endIndices.get(i);
-//        pieceConfig.posRatioList = new float[posRatioList.size()];
-//        for(int i = 0; i < posRatioList.size(); i++) pieceConfig.posRatioList[i] = posRatioList.get(i);
-
-        Info.pieceConfigsMap.put(id, pieceConfig);
-    }
-
-    private static void parsePieceConfigsObjectNew(JSONObject piece) {
+    private void parsePieceConfigsObject(JSONObject piece) {
         int id = (int) (long) piece.get("id");
         String name = (String) piece.get("name");
         int width = (int) (long) piece.get("width");
@@ -267,5 +233,18 @@ public class LoadingScreen implements Screen {
         pieceConfig.edges = edges;
 
         Info.pieceConfigsMap.put(id, pieceConfig);
+    }
+
+    private void loadShips(JSONArray jsonArray) {
+        Info.ships = new ArrayList<>(jsonArray.size());
+        for(Object o : jsonArray) {
+            JSONArray shipJsonArray = (JSONArray) ((JSONObject) o).get("ship");
+            String[] ship = new String[shipJsonArray.size()];
+            for(int i = 0; i < shipJsonArray.size(); i++) {
+                String s = shipJsonArray.get(i).toString();
+                ship[i] = s;
+            }
+            Info.ships.add(ship);
+        }
     }
 }

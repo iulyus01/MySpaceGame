@@ -76,6 +76,13 @@ public class ShapeRenderingDebug {
         shapes.end();
     }
 
+    public static void drawDebugCircle(float x, float y, float radius) {
+        shapes.begin(ShapeRenderer.ShapeType.Filled);
+        shapes.setColor(1, .3f, .95f, 1);
+        shapes.circle(x, y, radius);
+        shapes.end();
+    }
+
     public static void drawDebugLine(float x1, float y1, float x2, float y2, Color color) {
         shapes.begin(ShapeRenderer.ShapeType.Filled);
         shapes.setColor(color);

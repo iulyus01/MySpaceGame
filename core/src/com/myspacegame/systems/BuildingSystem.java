@@ -2,8 +2,6 @@ package com.myspacegame.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
@@ -28,7 +26,6 @@ public class BuildingSystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<TextureComponent> textureMapper;
     private final ComponentMapper<ShipComponent> shipMapper;
-    private final ComponentMapper<PlayerComponent> playerMapper;
     private final KeyboardController controller;
     private final EntitiesFactory entitiesFactory;
     private final BodyFactory bodyFactory;
@@ -41,28 +38,27 @@ public class BuildingSystem extends IteratingSystem {
     private boolean isDraggingPiece = false;
     private boolean isDraggingPieceBegin = false;
     private Entity draggingEntity = null;
+    private Entity hoverEntity = null;
+    private boolean hoverIsActive = false;
     private Fixture draggedFixture = null;
     private short draggingFixtureMask = 0;
     private final Array<Info.Pair<Anchor, Anchor>> toAttachAnchors;
 
-    private final TextureRegion hoverTexture;
     private TextureComponent lastTextureComponent;
 
     public BuildingSystem(KeyboardController keyboardController, MainClass game, PooledEngine engine) {
-        super(Family.all(TextureComponent.class, TransformComponent.class, PieceComponent.class).get());
+        super(Family.one(PieceComponent.class).exclude(NPCComponent.class).get());
         this.engine = engine;
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         textureMapper = ComponentMapper.getFor(TextureComponent.class);
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
         shipMapper = ComponentMapper.getFor(ShipComponent.class);
-        playerMapper = ComponentMapper.getFor(PlayerComponent.class);
         controller = keyboardController;
 
         world = WorldFactory.getInstance(game, engine).getWorld();
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
         bodyFactory = BodyFactory.getInstance(world);
 
-        hoverTexture = new TextureRegion(game.assetManager.get("images/hover.png", Texture.class));
         toAttachAnchors = new Array<>(false, 20, Info.Pair.class);
 
         Entity playerEntity = engine.getEntitiesFor(Family.all(PlayerComponent.class, ShipComponent.class, PieceComponent.class).get()).first();
@@ -74,6 +70,9 @@ public class BuildingSystem extends IteratingSystem {
     @Override
     public void update(float deltaTime) {
         super.update(deltaTime);
+
+        transformMapper.get(hoverEntity).isHidden = !hoverIsActive;
+        hoverIsActive = false;
 
         if(controller.isDragged) {
             if(isDraggingPieceBegin) {
@@ -91,9 +90,17 @@ public class BuildingSystem extends IteratingSystem {
     }
 
     @Override
+    public void addedToEngine(Engine engine) {
+        super.addedToEngine(engine);
+        hoverEntity = entitiesFactory.createPieceHoverEntity();
+        engine.addEntity(hoverEntity);
+    }
+
+    @Override
     public void removedFromEngine(Engine engine) {
         super.removedFromEngine(engine);
         if(lastTextureComponent != null) lastTextureComponent.overlayTexture = null;
+        entitiesFactory.removePieceHoverEntity(hoverEntity);
     }
 
     @Override
@@ -108,19 +115,19 @@ public class BuildingSystem extends IteratingSystem {
         boolean closeToEntityX = Math.abs(Info.mouseWorldX - fixtureCenter.x) < Info.blockSize * piece.W * 4f;
         boolean closeToEntityY = Math.abs(Info.mouseWorldY - fixtureCenter.y) < Info.blockSize * piece.H * 4f;
         if(closeToEntityX && closeToEntityY) {
+            // test mouse hover
             if(pieceComponent.fixture.testPoint(Info.mouseWorldX, Info.mouseWorldY)) {
-                textureComponent.overlayTexture = hoverTexture;
+                updatePieceHoverTransform(transformMapper.get(hoverEntity), textureMapper.get(hoverEntity), transformMapper.get(entity));
+                hoverIsActive = true;
+//                textureComponent.overlayTexture = hoverTexture;
                 if(controller.isDragged) {
                     isDraggingPieceBegin = true;
                     draggingEntity = entity;
                     draggedFixture = pieceComponent.fixture;
                 }
                 lastTextureComponent = textureComponent;
-            } else {
-                textureComponent.overlayTexture = null;
             }
-        } else {
-            textureComponent.overlayTexture = null;
+
         }
 
     }
@@ -151,7 +158,7 @@ public class BuildingSystem extends IteratingSystem {
         // idea
         // the body(fixture) won't fix itself, but another entity used as a piece ghost will be fixed
         // maybe
-        // i'll just draw lines...
+        // i'll just draw lines... yea..
         toAttachAnchors.clear();
         for(Piece shipPiece : playerShip.piecesArray) {
             if(shipPiece == null) continue;
@@ -255,6 +262,8 @@ public class BuildingSystem extends IteratingSystem {
         piece.pos.y = Math.round(((pieceComponent.fixtureCenter.y + offsetY - shipComponent.core.pieceComponent.fixtureCenter.y) / Info.blockSize) * 2) / 2f;
 
         for(var pair : attachAnchors) {
+            entitiesFactory.removeAnchorEntity(pair.first);
+            entitiesFactory.removeAnchorEntity(pair.second);
             pair.first.piece = piece;
             pair.second.piece = pair.first.srcPiece;
         }
@@ -268,6 +277,17 @@ public class BuildingSystem extends IteratingSystem {
         entity.add(engine.createComponent(PlayerComponent.class));
         entity.add(shipComponent);
 
+    }
+
+    private void updatePieceHoverTransform(TransformComponent transformComponent, TextureComponent textureComponent, TransformComponent pieceTransform) {
+        transformComponent.width = pieceTransform.width;
+        transformComponent.height = pieceTransform.height;
+        transformComponent.position.x = pieceTransform.position.x;
+        transformComponent.position.y = pieceTransform.position.y;
+        transformComponent.scale.x = transformComponent.width / textureComponent.textureRegion.getRegionWidth();
+        transformComponent.scale.y = transformComponent.height / textureComponent.textureRegion.getRegionHeight();
+        transformComponent.angleRad = pieceTransform.angleRad;
+        transformComponent.angleOrientationRad = 0;
     }
 
 }

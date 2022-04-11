@@ -22,19 +22,26 @@ public class EntitiesFactory {
     private static EntitiesFactory instance = null;
     private final MainClass game;
     private final Engine engine;
-    private final World world;
     private final BodyFactory bodyFactory;
+
+    private final TextureRegion anchorTexture;
+    private final TextureRegion pieceHoverTexture;
 
     private EntitiesFactory(MainClass game, Engine engine, World world) {
         this.game = game;
         this.engine = engine;
-        this.world = world;
 
         bodyFactory = BodyFactory.getInstance(world);
+        anchorTexture = new TextureRegion(game.assetManager.get("images/anchor.png", Texture.class));
+        pieceHoverTexture = new TextureRegion(game.assetManager.get("images/hover.png", Texture.class));
     }
 
     public static EntitiesFactory getInstance(MainClass game, Engine engine, World world) {
         if(instance == null) instance = new EntitiesFactory(game, engine, world);
+        return instance;
+    }
+
+    public static EntitiesFactory get() {
         return instance;
     }
 
@@ -65,12 +72,11 @@ public class EntitiesFactory {
         int pieceWidth = 1;
         int pieceHeight = 1;
         float angleOrientationRad = 0;
-        Info.ZOrder z = Info.ZOrder.OTHERS;
 
         Entity entity = engine.createEntity();
 
         TextureComponent textureComponent = createTextureComponent("images/hull.png");
-        TransformComponent transformComponent = createTransformComponent(Info.blockSize * pieceWidth, Info.blockSize * pieceHeight, 0, angleOrientationRad, textureComponent, z);
+        TransformComponent transformComponent = createTransformComponent(Info.blockSize * pieceWidth, Info.blockSize * pieceHeight, 0, angleOrientationRad, textureComponent, Info.ZOrder.PIECE);
         PieceComponent simplePieceComponent = createPieceComponent(pieceX, pieceY, pieceWidth, pieceHeight);
         simplePieceComponent.fixture = bodyFactory.createPieceFixture(body, simplePieceComponent.piece, entity);
         HullPieceComponent pieceComponent = createHullPieceComponent(simplePieceComponent.piece);
@@ -88,14 +94,17 @@ public class EntitiesFactory {
     }
 
     public Entity createBullet(int actorId, float x, float y, float angleRad) {
-        float sizeWidth = Info.blockSize * 2.4f;
-        float sizeHeight = Info.blockSize;
+        float sizeWidth = Info.blockSize * 5f / 2;
+        float sizeHeight = sizeWidth * .65f;
+
+        x += Math.cos(angleRad) * sizeWidth / 2;
+        y += Math.sin(angleRad) * sizeWidth / 2;
 
         Entity entity = engine.createEntity();
         TextureComponent textureComponent = createTextureComponent("images/bullet.png");
         BulletComponent bulletComponent = createBulletComponent(actorId);
         TransformComponent transformComponent = createTransformComponent(sizeWidth, sizeHeight, angleRad, 0, textureComponent, Info.ZOrder.BULLETS);
-        Body body = bodyFactory.createBulletBody(x, y, Info.blockSize, Info.blockSize / 4, angleRad, Info.defaultBulletImpulse, entity);
+        Body body = bodyFactory.createBulletBody(x, y, Info.blockSize * 2, Info.blockSize / 2, angleRad, Info.defaultBulletImpulse, entity);
         BodyComponent bodyComponent = createBodyComponent(body);
         CollisionComponent collisionComponent = createCollisionComponent();
 
@@ -106,6 +115,59 @@ public class EntitiesFactory {
         entity.add(collisionComponent);
 
         return entity;
+    }
+
+    public Entity createAnchorEntity(PieceComponent pieceComponent, Anchor anchor, boolean active) {
+        Entity entity = engine.createEntity();
+
+        float size = Info.blockSize / 6;
+        AnchorComponent anchorComponent = engine.createComponent(AnchorComponent.class);
+        anchorComponent.anchor = anchor;
+        anchorComponent.piece = pieceComponent.piece;
+        anchorComponent.active = active;
+        TextureComponent textureComponent = engine.createComponent(TextureComponent.class);
+        textureComponent.textureRegion = anchorTexture;
+        TransformComponent transformComponent = engine.createComponent(TransformComponent.class);
+        transformComponent.width = size;
+        transformComponent.height = size;
+        transformComponent.position.x = anchor.pos.x;
+        transformComponent.position.y = anchor.pos.y;
+        transformComponent.position.z = Info.ZOrder.ANCHOR.getValue();
+        transformComponent.scale.x = transformComponent.width / anchorTexture.getRegionWidth();
+        transformComponent.scale.y = transformComponent.height / anchorTexture.getRegionHeight();
+        transformComponent.isHidden = (Math.abs(pieceComponent.fixtureCenter.x - Info.mouseWorldX) > Info.blockSize * 20 || Math.abs(pieceComponent.fixtureCenter.y - Info.mouseWorldY) > Info.blockSize * 20);
+
+        anchor.anchorComponent = anchorComponent;
+
+        entity.add(anchorComponent);
+        entity.add(textureComponent);
+        entity.add(transformComponent);
+
+        return entity;
+    }
+
+    public Entity createPieceHoverEntity() {
+        Entity entity = engine.createEntity();
+
+        TextureComponent textureComponent = engine.createComponent(TextureComponent.class);
+        textureComponent.textureRegion = pieceHoverTexture;
+        TransformComponent transformComponent = engine.createComponent(TransformComponent.class);
+        transformComponent.position.z = Info.ZOrder.HOVER_OVERLAY.getValue();
+
+        entity.add(textureComponent);
+        entity.add(transformComponent);
+
+        return entity;
+    }
+
+    public void removeAnchorEntity(Anchor anchor) {
+        if(anchor.anchorComponent == null) return;
+        anchor.anchorComponent.toRemove = true;
+        System.out.println("test remove anchor entity");
+    }
+
+    public void removePieceHoverEntity(Entity entity) {
+        engine.removeEntity(entity);
     }
 
 
@@ -213,10 +275,10 @@ public class EntitiesFactory {
             TextureComponent textureComponent = createTextureComponent(Info.PIECE_TEXTURE_PATH + Info.pieceConfigsMap.get(piece.pieceConfigId).textureName);
 
             if(piece instanceof CorePiece) {
-                transformComponent = createTransformComponent(piece.W, piece.H, 0, 0, textureComponent, Info.ZOrder.OTHERS);
+                transformComponent = createTransformComponent(piece.W, piece.H, 0, 0, textureComponent, Info.ZOrder.PIECE);
                 specificPieceComponent = createCorePieceComponent((CorePiece) piece);
             } else if(piece instanceof HullPiece) {
-                transformComponent = createTransformComponent(piece.W, piece.H, 0, 0, textureComponent, Info.ZOrder.OTHERS);
+                transformComponent = createTransformComponent(piece.W, piece.H, 0, 0, textureComponent, Info.ZOrder.PIECE);
                 specificPieceComponent = createHullPieceComponent((HullPiece) piece);
             } else if(piece instanceof WeaponPiece) {
                 transformComponent = createTransformComponent(piece.W, piece.H, 0, 0, textureComponent, Info.ZOrder.WEAPONS);
@@ -226,7 +288,7 @@ public class EntitiesFactory {
                 TextureRotatingComponent rotatingComponent = createTextureRotatingComponent(Info.PIECE_TEXTURE_PATH + "gun.png", 112, 112);
                 entity.add(rotatingComponent);
             } else if(piece instanceof ThrusterPiece) {
-                transformComponent = createTransformComponent(piece.W, piece.H, 0, ((ThrusterPiece) piece).angleDirection * Info.rad90Deg, textureComponent, Info.ZOrder.OTHERS);
+                transformComponent = createTransformComponent(piece.W, piece.H, 0, ((ThrusterPiece) piece).angleDirection * Info.rad90Deg, textureComponent, Info.ZOrder.PIECE);
                 specificPieceComponent = createThrusterPieceComponent((ThrusterPiece) piece);
             }
 
@@ -238,8 +300,13 @@ public class EntitiesFactory {
             entity.add(collisionComponent);
             entities.add(entity);
             if(isPlayer) entity.add(engine.createComponent(PlayerComponent.class));
+            else entity.add(engine.createComponent(NPCComponent.class));
 
             piece.pieceComponent = pieceComponent;
+            for(Anchor a : piece.anchors) {
+                Entity anchorEntity = createAnchorEntity(pieceComponent, a, a.piece == null && isPlayer);
+                engine.addEntity(anchorEntity);
+            }
         }
     }
 

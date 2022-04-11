@@ -26,8 +26,8 @@ public class BodyFactory {
         FixtureDef fixtureDef = new FixtureDef();
         switch(entityType) {
             case PIECE:
-                fixtureDef.density = 10f;
-                fixtureDef.friction = 0.5f;
+                fixtureDef.density = Info.defaultPieceDensity;
+                fixtureDef.friction = 0f;
                 fixtureDef.restitution = 0f;
 //                fixtureDef.filter.categoryBits = Info.CATEGORY_PIECE;
 //                fixtureDef.filter.maskBits = Info.MASK_EVERYTHING;

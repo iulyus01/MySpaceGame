@@ -28,6 +28,7 @@ public class RenderingRotatingSystem extends SortedIteratingSystem {
         rotatingTextureMapper = ComponentMapper.getFor(TextureRotatingComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
+        // TODO make this a separate entity.. i think
     }
 
     @Override

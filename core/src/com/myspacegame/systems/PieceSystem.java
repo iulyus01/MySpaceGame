@@ -11,14 +11,13 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.myspacegame.Info;
 import com.myspacegame.MainClass;
-import com.myspacegame.components.PlayerComponent;
-import com.myspacegame.components.ShipComponent;
-import com.myspacegame.components.TransformComponent;
+import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.PieceComponent;
 import com.myspacegame.entities.Anchor;
 import com.myspacegame.entities.CorePiece;
 import com.myspacegame.entities.Piece;
 import com.myspacegame.factories.BodyFactory;
+import com.myspacegame.factories.EntitiesFactory;
 import com.myspacegame.factories.WorldFactory;
 
 import java.util.Arrays;
@@ -31,6 +30,8 @@ public class PieceSystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<ShipComponent> shipMapper;
 
+    private final EntitiesFactory entitiesFactory;
+
     private final BodyFactory bodyFactory;
     private final Array<Piece> connectedPiecesToDetach;
 
@@ -39,7 +40,7 @@ public class PieceSystem extends IteratingSystem {
         this.engine = engine;
         World world = WorldFactory.getInstance(game, engine).getWorld();
         this.bodyFactory = BodyFactory.getInstance(world);
-
+        this.entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
 
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
@@ -108,6 +109,7 @@ public class PieceSystem extends IteratingSystem {
             if(anchor.piece == null) continue;
             connectedPiecesToDetach.add(anchor.piece);
         }
+        piece.actorId = -1;
         detachPieceSingle(piece, entity);
         piece.pieceComponent.toRecreateFixture = true;
 
@@ -185,6 +187,7 @@ public class PieceSystem extends IteratingSystem {
 
         if(shipMapper.has(entity)) shipMapper.get(entity).piecesArray.removeValue(pieceComponent.piece, true);
 
+        entity.remove(NPCComponent.class);
         entity.remove(PlayerComponent.class);
         entity.remove(ShipComponent.class);
     }

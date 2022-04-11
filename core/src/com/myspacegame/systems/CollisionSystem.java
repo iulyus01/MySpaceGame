@@ -82,6 +82,7 @@ public class CollisionSystem extends IteratingSystem {
             }
 
             bulletComponent.isDead = true;
+            textureMapper.get(bulletEntity).textureRegion = null;
 
 //			getEngine().removeEntity(bulletEntity);
 //			getEngine().removeEntity(collidedEntity);

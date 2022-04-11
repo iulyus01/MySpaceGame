@@ -2,6 +2,8 @@ package com.myspacegame;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
@@ -46,7 +48,10 @@ public class Info {
     public static float mouseWorldY;
     public static float cameraWorldX;
     public static float cameraWorldY;
+    public static final float rad90Deg = 1.570f;
     public static Vector2 tempVector2 = new Vector2();
+    public static TextureRegion testTexture;
+    public static final int playerActorId = 0;
 
     // box2D
     public static final float PPM = 24.0f;
@@ -54,17 +59,15 @@ public class Info {
 //    public static final float blockSize = .24f;
     public static final float blockSize = .5f;
     public static final float maxPieceSize = 5 * blockSize;
+    public static final float defaultPieceDensity = 10f;
 //    public static final float defaultThrusterForce = 14f;
     public static final float defaultThrusterForce = 140f;
     public static final float defaultThrusterImpulse = 4f;
-    public static final float defaultBulletImpulse = 1.8f;
-    public static final float defaultBulletDensity = 1.2f;
-    public static final float defaultPieceLinearDamping = .01f;
+    public static final float defaultBulletImpulse = 8f;
+    public static final float defaultBulletDensity = 1.8f;
+    public static final float defaultPieceLinearDamping = 0;
     public static final float defaultPieceAngularDamping = 0;
     public static final float maxHorVerVelocity = 8f; // maximum horizontal vertical speed
-
-    public static final float tempBlockDiagonal = blockSize * 1.414213f;
-    public static final float rad90Deg = 1.570f;
 
 
 
@@ -81,93 +84,9 @@ public class Info {
 
     public static Map<Integer, PieceConfig> pieceConfigsMap;
 
-    public static final String[] newNewShip1 = {
-//            "pieceTypeId: 0, x: 0, y: 0, shapeId: 0",
-            "0 0 0 0",
-            "1 1 0 1",
-            "1 0 1 1",
-            "1 0 -1 1",
-            "1 2 0 1",
-            "3 1 1 5",
-            "3 1 -1 5",
-            "1 0 2 1",
-            "1 -1 1 1", // 8
-            "1 -1 -1 1", // 9
-            "1 0 -2 1",
-            "1 4 0 3",
-            "23D 2 1 4",
-            "21A 2 -1 4",
-            "23A -1 2 4",
-            "20W -2 1 4", // 15
-            "20W -2 -1 4", // 16
-            "21D -1 -2 4",
-            "20W -1 0 4",
-            "20W -2 0 4",
-            "",
-            "0 1 2 18 3",
-            "1 4 5 0 6",
-            "2 5 7 8 0",
-            "3 6 0 9 10",
-            "4 11 12 1 13",
-            "5 12 - 2 1",
-            "6 13 1 3 -",
-            "7 - - 14 2",
-            "8 2 14 15 18",
-            "9 3 18 16 17",
-            "10 - 3 17 -",
-            "11 - - - - 4 - - -",
-            "12 - - 5 4",
-            "13 - 4 6 -",
-            "14 7 - - 8",
-            "15 8 - - 19",
-            "16 9 19 - -",
-            "17 10 9 - -",
-            "18 0 8 19 9",
-            "19 18 15 - 16"
-    };
-    public static final String[] newNewNewShip1 = {
-            // pieceTypeId: 0, shapeId: 0, rotation: 0, x: 0, y: 0
-            "0 0 0 0 0 0",
-            "1 1 1 0 1 0",
-            "2 1 1 0 0 1",
-            "3 1 1 0 0 -1",
-            "4 1 1 0 2 0",
-            "5 3 4 0 1 1",
-            "6 3 4 0 1 -1",
-            "7 1 1 0 0 2",
-            "8 1 1 0 -1 1",
-            "9 1 1 0 -1 -1",
-            "10 1 1 0 0 -2",
-            "11 1 2 0 4 0",
-            "12 2D 3 3 2 1",
-            "13 2A 3 1 2 -1",
-            "14 2A 3 3 -1 2",
-            "15 2W 3 0 -2 1",
-            "16 2W 3 0 -2 -1",
-            "17 2D 3 1 -1 -2",
-            "18 2W 3 0 -1 0",
-            "",
-            // pieceId # edgeId edgeAnchorId id edgeAnchorId id # edgeId edgeAnchorId id
-            "0 # 0 0 1 # 1 0 2 # 2 0 18 # 3 0 3",
-            "1 # 0 0 4 # 1 0 5 # 2 0 0 # 3 0 6",
-            "2 # 0 0 5 # 1 0 7 # 2 0 8 # 3 0 0",
-            "3 # 0 0 6 # 1 0 0 # 2 0 9 # 3 0 10",
-            "4 # 0 0 11 # 1 0 12 # 2 0 1 # 3 0 13",
-            "5 # 0 0 - # 1 0 - # 2 0 2 # 3 0 1",
-            "6 # 0 0 - # 1 0 1 # 2 0 3 # 3 0 -",
-            "7 # 0 0 - # 1 0 - # 2 0 - # 3 0 2",
-            "8 # 0 0 2 # 1 0 14 # 2 0 15 # 3 0 -",
-            "9 # 0 0 3 # 1 0 - # 2 0 16 # 3 0 17",
-            "10 # 0 0 - # 1 0 3 # 2 0 - # 3 0 -",
-            "11 # 0 0 - # 1 0 - 1 - 2 - # 2 0 4 # 3 0 - 1 - 2 - ",
-            "12 # 0 0 4",
-            "13 # 0 0 4",
-            "14 # 0 0 8",
-            "15 # 0 0 8",
-            "16 # 0 0 9",
-            "17 # 0 0 9",
-            "18 # 0 0 0",
-    };
+    // pieceId  pieceTypeId  shapeId  rotation  x  y
+    // pieceId # edgeId edgeAnchorId id edgeAnchorId id # edgeId edgeAnchorId id
+    public static List<String[]> ships;
 
     public enum PlayerMode {
         MOVING, BUILDING
@@ -182,7 +101,7 @@ public class Info {
     }
 
     public enum ZOrder {
-        OTHERS(0), WEAPONS(1), BULLETS(2), PIECE_DRAG(3);
+        OTHERS(0), PIECE(3), WEAPONS(5), BULLETS(8), PIECE_DRAG(10), ANCHOR(15), HOVER_OVERLAY(20);
 
         private final int value;
 
@@ -205,24 +124,27 @@ public class Info {
         }
     }
 
-    public static class Quadruple<A, B, C, D> {
+    public static class Quintuple<A, B, C, D, E> {
         public A first;
         public B second;
         public C third;
         public D forth;
+        public E fifth;
 
-        public Quadruple(A first, B second, C third, D forth) {
+        public Quintuple(A first, B second, C third, D forth, E fifth) {
             this.first = first;
             this.second = second;
             this.third = third;
             this.forth = forth;
+            this.fifth = fifth;
         }
 
-        public void set(A first, B second, C third, D forth) {
+        public void set(A first, B second, C third, D forth, E fifth) {
             this.first = first;
             this.second = second;
             this.third = third;
             this.forth = forth;
+            this.fifth = fifth;
         }
     }
 
@@ -235,7 +157,8 @@ public class Info {
     public static Color colorRed;
 
     public static void init() {
-        colorClear = new Color(.184f, .215f, .258f, .4f);
+//        colorClear = new Color(.184f, .215f, .258f, .4f);
+        colorClear = new Color(0.06f, 0, 0.07f, 1);
 
         colorCyan = new Color(.160f, .713f, .964f, 1);
         colorBlue = new Color(.129f, .588f, .952f, 1);
@@ -246,6 +169,7 @@ public class Info {
 
 
         activeMode = PlayerMode.MOVING;
+        testTexture = new TextureRegion(new Texture("badlogic.jpg"));
     }
 
     public static float[] edgesToNewVerticesArray(List<PieceEdge> edges, float multiplication) {

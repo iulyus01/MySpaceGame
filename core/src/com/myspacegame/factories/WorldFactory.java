@@ -2,6 +2,7 @@ package com.myspacegame.factories;
 
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.PooledEngine;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.myspacegame.Info;
@@ -38,20 +39,21 @@ public class WorldFactory {
         return instance;
     }
 
+    public Entity createEnemyRandomShip(float x, float y) {
+        List<Entity> enemyEntities = entitiesFactory.createShip(Info.ships.get(MathUtils.random(Info.ships.size() - 1)), x, y, 1, false);
+        for(Entity entity : enemyEntities) engine.addEntity(entity);
+        return enemyEntities.get(0);
+    }
+
     private void generateBackground() {
         backgroundFactory.generate();
     }
 
     private void addEntities() {
-//        List<Entity> playerEntities = entitiesFactory.createShip(Info.shipSample3, 0, 0, true);
-//        for(Entity entity : playerEntities) engine.addEntity(entity);
-
-
-        List<Entity> playerEntities = entitiesFactory.createShip(Info.newNewNewShip1, 10, 10, 0, true);
+        List<Entity> playerEntities = entitiesFactory.createShip(Info.ships.get(0), 10, 10, Info.playerActorId, true);
         for(Entity entity : playerEntities) engine.addEntity(entity);
-
-//        List<Entity> enemyEntities = entitiesFactory.createShip(Info.newNewShip1, 20, 10, 1, false);
-//        for(Entity entity : enemyEntities) engine.addEntity(entity);
+        List<Entity> enemyEntities = entitiesFactory.createShip(Info.ships.get(MathUtils.random(Info.ships.size() - 1)), 20, 10, 1, false);
+        for(Entity entity : enemyEntities) engine.addEntity(entity);
 
 
 //        List<Entity> playerEntities = entitiesFactory.createShip(Info.shipSample1, 10, 10, true);

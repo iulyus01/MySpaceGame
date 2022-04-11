@@ -1,13 +1,16 @@
 package com.myspacegame.entities;
 
 import com.badlogic.gdx.math.Vector2;
+import com.myspacegame.components.AnchorComponent;
 
 public class Anchor {
-    public int edgeIndex;
-    public int edgeAnchorIndex;
-    public final Vector2 pos;
+
+    public AnchorComponent anchorComponent;
     public Piece piece = null;
     public final Piece srcPiece;
+    public final Vector2 pos;
+    public int edgeIndex;
+    public int edgeAnchorIndex;
 
     public Anchor(Piece srcPiece) {
         pos = new Vector2();

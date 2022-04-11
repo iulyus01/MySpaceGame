@@ -18,6 +18,8 @@ import com.myspacegame.components.pieces.WeaponPieceComponent;
 import com.myspacegame.entities.ThrusterPiece;
 import com.myspacegame.entities.WeaponPiece;
 import com.myspacegame.factories.EntitiesFactory;
+import com.myspacegame.factories.ShapeRenderingDebug;
+import com.myspacegame.factories.SystemManager;
 import com.myspacegame.factories.WorldFactory;
 
 public class PlayerControlSystem extends IteratingSystem {
@@ -26,7 +28,6 @@ public class PlayerControlSystem extends IteratingSystem {
     private final ComponentMapper<PieceComponent> pieceMapper;
     private final ComponentMapper<ThrusterPieceComponent> pieceThrusterMapper;
     private final ComponentMapper<WeaponPieceComponent> pieceWeaponMapper;
-    private final ComponentMapper<TextureRotatingComponent> rotatingMapper;
     private final KeyboardController controller;
     private final MainClass game;
     private final PooledEngine engine;
@@ -35,8 +36,7 @@ public class PlayerControlSystem extends IteratingSystem {
 
     private final Body playerBody;
 
-    private Array<Info.Quadruple<Float, Float, Float, Float>> thrusterForces;
-    private int thrusterForcesSize = 0;
+    private final Array<Info.Quintuple<Float, Float, Float, Float, Integer>> thrusterForces;
 
     public PlayerControlSystem(KeyboardController keyboardController, MainClass game, PooledEngine engine, OrthographicCamera camera) {
         super(Family.all(PlayerComponent.class).one(ThrusterPieceComponent.class, WeaponPieceComponent.class).get());
@@ -47,7 +47,6 @@ public class PlayerControlSystem extends IteratingSystem {
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
         pieceThrusterMapper = ComponentMapper.getFor(ThrusterPieceComponent.class);
         pieceWeaponMapper = ComponentMapper.getFor(WeaponPieceComponent.class);
-        rotatingMapper = ComponentMapper.getFor(TextureRotatingComponent.class);
         controller = keyboardController;
 
         World world = WorldFactory.getInstance(game, engine).getWorld();
@@ -55,10 +54,11 @@ public class PlayerControlSystem extends IteratingSystem {
         Entity entity = engine.getEntitiesFor(Family.all(PlayerComponent.class, PieceComponent.class).get()).first();
         playerBody = pieceMapper.get(entity).fixture.getBody();
 
-        thrusterForces = new Array<>(false, 10, Info.Quadruple.class);
-        for(int i = 0; i < 10; i++) {
-            thrusterForces.add(new Info.Quadruple<>(0f, 0f, 0f, 0f));
-        }
+        thrusterForces = new Array<>(true, 4, Info.Quintuple.class);
+        thrusterForces.add(new Info.Quintuple<>(0f, 0f, 0f, 0f, 0));
+        thrusterForces.add(new Info.Quintuple<>(0f, 0f, 0f, 0f, 0));
+        thrusterForces.add(new Info.Quintuple<>(0f, 0f, 0f, 0f, 0));
+        thrusterForces.add(new Info.Quintuple<>(0f, 0f, 0f, 0f, 0));
     }
 
     @Override
@@ -70,9 +70,22 @@ public class PlayerControlSystem extends IteratingSystem {
         switch(Info.activeMode) {
             case MOVING:
                 applyForces();
-                playerBody.setLinearVelocity(Math.min(playerBody.getLinearVelocity().x, Info.maxHorVerVelocity), Math.min(playerBody.getLinearVelocity().y, Info.maxHorVerVelocity));
+
+                float velX = playerBody.getLinearVelocity().x;
+                float velY = playerBody.getLinearVelocity().y;
+                velX = Math.signum(velX) * Math.min(Math.abs(velX), Info.maxHorVerVelocity);
+                velY = Math.signum(velY) * Math.min(Math.abs(velY), Info.maxHorVerVelocity);
+                playerBody.setLinearVelocity(velX, velY);
+
+//                playerBody.setLinearVelocity(playerBody.getLinearVelocity().x, playerBody.getLinearVelocity().y);
+//                Info.tempVector2.x = playerBody.getLinearVelocity().x;
+//                Info.tempVector2.y = playerBody.getLinearVelocity().y;
+//                Info.tempVector2.nor();
+//                playerBody.setLinearVelocity(Info.tempVector2.x * Info.maxHorVerVelocity, Info.tempVector2.y * Info.maxHorVerVelocity);
+
                 camera.position.set(playerBody.getWorldCenter().x, playerBody.getWorldCenter().y, 0);
                 camera.update();
+
                 break;
             case BUILDING:
                 playerBody.setLinearVelocity(0, 0);
@@ -88,8 +101,6 @@ public class PlayerControlSystem extends IteratingSystem {
                 handleBuildingKeys();
                 break;
         }
-
-        thrusterForcesSize = 0;
 
     }
 
@@ -117,7 +128,6 @@ public class PlayerControlSystem extends IteratingSystem {
         ThrusterPieceComponent thrusterComponent = pieceThrusterMapper.get(entity);
         ThrusterPiece piece = thrusterComponent.piece;
 
-//        float linearImpulse = Info.defaultThrusterForce;
         float linearImpulse = Info.defaultThrusterImpulse;
 
         boolean wPressed = (controller.wDown && piece.activateKey == Info.Key.W);
@@ -129,11 +139,21 @@ public class PlayerControlSystem extends IteratingSystem {
             float angleY = (float) Math.sin(transformComponent.angleRad + thrusterComponent.piece.angleDirection * Info.rad90Deg);
             Vector2 fixtureCenter = pieceComponent.fixtureCenter;
 
-            thrusterForces.get(thrusterForcesSize).set(angleX * linearImpulse, angleY * linearImpulse, fixtureCenter.x, fixtureCenter.y);
-            thrusterForcesSize += 1;
-            if(thrusterForcesSize > thrusterForces.size) {
-                thrusterForces.add(new Info.Quadruple<>(0f, 0f, 0f, 0f));
-            }
+            var q = thrusterForces.get(piece.angleDirection);
+            int nr = q.fifth;
+            float impulseX = q.first + angleX * linearImpulse;
+            float impulseY = q.second + angleY * linearImpulse;
+            float pointX = (q.third * nr + fixtureCenter.x) / (nr + 1);
+            float pointY = (q.forth * nr + fixtureCenter.y) / (nr + 1);
+
+
+
+//            if(piece.angleDirection == 0) {
+//                pointX = -.84f;
+//                pointY = 0;
+//            }
+
+            q.set(impulseX, impulseY, pointX, pointY, nr + 1);
         }
     }
 
@@ -176,11 +196,13 @@ public class PlayerControlSystem extends IteratingSystem {
             controller.bPressed = false;
             if(Info.activeMode == Info.PlayerMode.MOVING) {
                 Info.activeMode = Info.PlayerMode.BUILDING;
-                engine.addSystem(new BuildingSystem(controller, game, engine));
-//                engine.addSystem(new BuildingRenderingSystem(game, engine, camera));
+//                engine.addSystem(new BuildingSystem(controller, game, engine));
+//                engine.addSystem(new RenderingBuildingSystem(game, engine, camera));
+                SystemManager.getInstance().toggleBuilding(true);
             } else if(Info.activeMode == Info.PlayerMode.BUILDING) {
                 Info.activeMode = Info.PlayerMode.MOVING;
-                engine.removeSystem(engine.getSystem(BuildingSystem.class));
+//                engine.removeSystem(engine.getSystem(BuildingSystem.class));
+                SystemManager.getInstance().toggleBuilding(false);
             }
         }
     }
@@ -206,7 +228,8 @@ public class PlayerControlSystem extends IteratingSystem {
     }
 
     private void applyForces() {
-        for(int i = 0; i < thrusterForcesSize; i++) {
+        for(int i = 0; i < thrusterForces.size; i++) {
+            if(thrusterForces.get(i).fifth == 0) continue;
 //            playerBody.applyForce(
             playerBody.applyLinearImpulse(
                     thrusterForces.get(i).first,
@@ -215,6 +238,14 @@ public class PlayerControlSystem extends IteratingSystem {
                     thrusterForces.get(i).forth,
                     true
             );
+
+            int finalI = i;
+//            ShapeRenderingDebug.addToDrawThenRemove(() -> ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(finalI).third, thrusterForces.get(finalI).forth, .5f));
+//            ShapeRenderingDebug.addToDrawThenRemove(() -> ShapeRenderingDebug.drawDebugLine(0, 0, thrusterForces.get(finalI).third, thrusterForces.get(finalI).forth));
+            ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(finalI).third, thrusterForces.get(finalI).forth, .5f);
+
+            thrusterForces.get(i).set(0f, 0f, 0f, 0f, 0);
+            // TODO set speed limit, use normalization (.nor())
         }
     }
 

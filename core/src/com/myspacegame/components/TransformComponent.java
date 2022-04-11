@@ -7,9 +7,10 @@ import com.badlogic.gdx.math.Vector3;
 public class TransformComponent implements Component {
     public final Vector3 position = new Vector3();
     public final Vector2 scale = new Vector2(1.0f, 1.0f);
+    // it will stretch to cover this width and height
     public float width = 10;
     public float height = 10;
-    public float angleRad = 45;
+    public float angleRad = 0;
     public float angleOrientationRad = 0;
     public boolean isHidden = false;
 }
