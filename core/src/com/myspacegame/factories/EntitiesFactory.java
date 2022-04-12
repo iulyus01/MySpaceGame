@@ -50,13 +50,30 @@ public class EntitiesFactory {
         extractShipString(shipString, shipComponent, actorId);
 
         Body body = bodyFactory.createPieceBody(shipX, shipY, 0);
-//        body.setTransform(body.getPosition(), Info.rad90Deg / 3);
 
         List<Entity> entities = new ArrayList<>();
 
         buildShipEntities(entities, shipComponent, body, isPlayer);
 
         return entities;
+    }
+
+    public Entity createWall(float x, float y, float width, float height) {
+        Entity entity = engine.createEntity();
+        TextureComponent textureComponent = createTextureComponent("badlogic.jpg");
+        TransformComponent transformComponent = createTransformComponent(width, height, 0, 0, textureComponent, Info.ZOrder.WALL);
+        transformComponent.position.x = x;
+        transformComponent.position.y = y;
+        Body body = bodyFactory.createWallBody(x, y, width, height, entity);
+        BodyComponent bodyComponent = createBodyComponent(body);
+        CollisionComponent collisionComponent = createCollisionComponent();
+
+        entity.add(bodyComponent);
+        entity.add(textureComponent);
+        entity.add(transformComponent);
+        entity.add(collisionComponent);
+
+        return entity;
     }
 
     public Entity createPiece(boolean random, float bodyX, float bodyY) {
@@ -290,17 +307,21 @@ public class EntitiesFactory {
             } else if(piece instanceof ThrusterPiece) {
                 transformComponent = createTransformComponent(piece.W, piece.H, 0, ((ThrusterPiece) piece).angleDirection * Info.rad90Deg, textureComponent, Info.ZOrder.PIECE);
                 specificPieceComponent = createThrusterPieceComponent((ThrusterPiece) piece);
+            } else {
+                transformComponent = createTransformComponent(Info.blockSize, Info.blockSize, 0, 0, textureComponent, Info.ZOrder.PIECE);
             }
 
-            if(transformComponent != null) entity.add(transformComponent);
-            if(specificPieceComponent != null) entity.add(specificPieceComponent);
+            entity.add(transformComponent);
             entity.add(textureComponent);
             entity.add(pieceComponent);
             entity.add(shipComponent);
             entity.add(collisionComponent);
-            entities.add(entity);
+            if(specificPieceComponent != null) entity.add(specificPieceComponent);
+            if(piece instanceof CorePiece) entity.add(engine.createComponent(ShipCoreComponent.class));
             if(isPlayer) entity.add(engine.createComponent(PlayerComponent.class));
             else entity.add(engine.createComponent(NPCComponent.class));
+
+            entities.add(entity);
 
             piece.pieceComponent = pieceComponent;
             for(Anchor a : piece.anchors) {
@@ -341,14 +362,6 @@ public class EntitiesFactory {
         BodyComponent bodyComponent = engine.createComponent(BodyComponent.class);
         bodyComponent.body = body;
         return bodyComponent;
-    }
-
-    private ShipComponent createShipComponent(Array<Array<Piece>> ship, int shipWidth, int shipHeight) {
-        ShipComponent shipComponent = engine.createComponent(ShipComponent.class);
-        shipComponent.ship = ship;
-        shipComponent.width = shipWidth;
-        shipComponent.height = shipHeight;
-        return shipComponent;
     }
 
     private PieceComponent createPieceComponent(int pieceX, int pieceY, int pieceWidth, int pieceHeight) {

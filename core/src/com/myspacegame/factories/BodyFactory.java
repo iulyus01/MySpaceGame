@@ -39,6 +39,11 @@ public class BodyFactory {
 //                fixtureDef.filter.categoryBits = Info.CATEGORY_BULLET;
 //                fixtureDef.filter.maskBits = Info.MASK_NOTHING;
                 break;
+            case WALL:
+                fixtureDef.density = 10;
+                fixtureDef.friction = .4f;
+                fixtureDef.restitution = .01f;
+                break;
         }
         return fixtureDef;
     }
@@ -51,10 +56,15 @@ public class BodyFactory {
                 bodyDef.fixedRotation = false;
                 bodyDef.angularDamping = Info.defaultPieceAngularDamping;
                 bodyDef.linearDamping = Info.defaultPieceLinearDamping;
+                bodyDef.gravityScale = 0;
                 break;
             case BULLET:
                 bodyDef.type = BodyDef.BodyType.DynamicBody;
                 bodyDef.fixedRotation = true;
+                bodyDef.bullet = true;
+                break;
+            case WALL:
+                bodyDef.type = BodyDef.BodyType.StaticBody;
                 break;
         }
         return bodyDef;
@@ -96,6 +106,26 @@ public class BodyFactory {
         return body;
     }
 
+    public Body createWallBody(float x, float y, float width, float height, Entity entity) {
+        BodyDef bodyDef = initBodyDef(Info.EntityType.WALL);
+        bodyDef.position.x = x;
+        bodyDef.position.y = y;
+        bodyDef.angle = 0;
+
+        Body body = world.createBody(bodyDef);
+
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(width / 2, height / 2);
+
+        FixtureDef fixtureDef = initFixtureDef(Info.EntityType.WALL);
+        fixtureDef.shape = shape;
+        Fixture fixture = body.createFixture(fixtureDef);
+        fixture.setUserData(entity);
+        shape.dispose();
+
+        return body;
+    }
+
     public Fixture createPieceFixture(Body body, Piece piece, Entity entity) {
         float[] vertices = new float[piece.shape.getVertices().length];
         for(int i = 0; i < piece.shape.getVertices().length;) {
@@ -109,6 +139,8 @@ public class BodyFactory {
 
         FixtureDef fixtureDef = initFixtureDef(Info.EntityType.PIECE);
         fixtureDef.shape = shape;
+        fixtureDef.friction = 0;
+        fixtureDef.restitution = 0;
 
         Fixture fixture = body.createFixture(fixtureDef);
         fixture.setUserData(entity);

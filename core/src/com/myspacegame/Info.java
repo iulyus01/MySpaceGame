@@ -42,6 +42,8 @@ public class Info {
     // misc
     public static final int W = Gdx.graphics.getWidth();
     public static final int H = Gdx.graphics.getHeight();
+    public static final float worldWidthLimit = 50f;
+    public static final float worldHeightLimit = 50f;
 
     // utils
     public static float mouseWorldX;
@@ -93,7 +95,11 @@ public class Info {
     }
 
     public enum EntityType {
-        PIECE, BULLET
+        PIECE, BULLET, WALL
+    }
+
+    public enum NPCType {
+        ALLY, NEUTRAL, ENEMY
     }
 
     public enum Key {
@@ -101,7 +107,7 @@ public class Info {
     }
 
     public enum ZOrder {
-        OTHERS(0), PIECE(3), WEAPONS(5), BULLETS(8), PIECE_DRAG(10), ANCHOR(15), HOVER_OVERLAY(20);
+        OTHERS(0), PIECE(3), WEAPONS(5), BULLETS(8), PIECE_DRAG(10), ANCHOR(15), HOVER_OVERLAY(20), WALL(30);
 
         private final int value;
 

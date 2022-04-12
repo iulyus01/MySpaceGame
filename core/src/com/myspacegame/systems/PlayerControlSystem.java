@@ -29,18 +29,17 @@ public class PlayerControlSystem extends IteratingSystem {
     private final ComponentMapper<ThrusterPieceComponent> pieceThrusterMapper;
     private final ComponentMapper<WeaponPieceComponent> pieceWeaponMapper;
     private final KeyboardController controller;
-    private final MainClass game;
     private final PooledEngine engine;
     private final OrthographicCamera camera;
     private final EntitiesFactory entitiesFactory;
 
     private final Body playerBody;
+    private float angularVelocity;
 
     private final Array<Info.Quintuple<Float, Float, Float, Float, Integer>> thrusterForces;
 
     public PlayerControlSystem(KeyboardController keyboardController, MainClass game, PooledEngine engine, OrthographicCamera camera) {
         super(Family.all(PlayerComponent.class).one(ThrusterPieceComponent.class, WeaponPieceComponent.class).get());
-        this.game = game;
         this.engine = engine;
         this.camera = camera;
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
@@ -76,25 +75,23 @@ public class PlayerControlSystem extends IteratingSystem {
                 velX = Math.signum(velX) * Math.min(Math.abs(velX), Info.maxHorVerVelocity);
                 velY = Math.signum(velY) * Math.min(Math.abs(velY), Info.maxHorVerVelocity);
                 playerBody.setLinearVelocity(velX, velY);
-
-//                playerBody.setLinearVelocity(playerBody.getLinearVelocity().x, playerBody.getLinearVelocity().y);
-//                Info.tempVector2.x = playerBody.getLinearVelocity().x;
-//                Info.tempVector2.y = playerBody.getLinearVelocity().y;
-//                Info.tempVector2.nor();
-//                playerBody.setLinearVelocity(Info.tempVector2.x * Info.maxHorVerVelocity, Info.tempVector2.y * Info.maxHorVerVelocity);
+                playerBody.setAngularVelocity(angularVelocity);
+                angularVelocity *= .99f;
 
                 camera.position.set(playerBody.getWorldCenter().x, playerBody.getWorldCenter().y, 0);
                 camera.update();
 
                 break;
             case BUILDING:
+                angularVelocity = 0;
                 playerBody.setLinearVelocity(0, 0);
                 playerBody.setAngularVelocity(0);
 
-                float angle = playerBody.getAngle() % (Info.rad90Deg * 4);
-                if(Math.abs(angle) > Info.rad90Deg * 2) angle = -(angle - Info.rad90Deg * 2);
+                int angle = (int) (playerBody.getAngle() * MathUtils.radDeg) % 360;
+                if(angle > 180) angle = angle - 360;
+                else if(angle < -180) angle = angle + 360;
 
-                if(Math.abs(playerBody.getAngle()) > 1 * MathUtils.degRad) playerBody.setTransform(playerBody.getPosition(), angle * .9f);
+                if(Math.abs(playerBody.getAngle()) > 1 * MathUtils.degRad) playerBody.setTransform(playerBody.getPosition(), angle * MathUtils.degRad * .9f);
                 else playerBody.setTransform(playerBody.getPosition(), 0);
 
                 handleBuildingCamera(deltaTime);
@@ -111,10 +108,8 @@ public class PlayerControlSystem extends IteratingSystem {
         PieceComponent pieceComponent = pieceMapper.get(entity);
         TransformComponent transformComponent = transformMapper.get(entity);
 
-        Body body = pieceComponent.fixture.getBody();
-
         if(entity.getComponent(ThrusterPieceComponent.class) != null) {
-            handleThrusters(entity, transformComponent, pieceComponent, body);
+            handleThrusters(entity, transformComponent, pieceComponent);
 
         } else if(entity.getComponent(WeaponPieceComponent.class) != null) {
             handleWeapons(entity, pieceComponent, deltaTime);
@@ -124,7 +119,7 @@ public class PlayerControlSystem extends IteratingSystem {
 //        bodyComponent.body.setLinearVelocity(MathUtils.lerp(bodyComponent.body.getLinearVelocity().x, 0, 0.1f), bodyComponent.body.getLinearVelocity().y);
     }
 
-    private void handleThrusters(Entity entity, TransformComponent transformComponent, PieceComponent pieceComponent, Body body) {
+    private void handleThrusters(Entity entity, TransformComponent transformComponent, PieceComponent pieceComponent) {
         ThrusterPieceComponent thrusterComponent = pieceThrusterMapper.get(entity);
         ThrusterPiece piece = thrusterComponent.piece;
 
@@ -146,12 +141,6 @@ public class PlayerControlSystem extends IteratingSystem {
             float pointX = (q.third * nr + fixtureCenter.x) / (nr + 1);
             float pointY = (q.forth * nr + fixtureCenter.y) / (nr + 1);
 
-
-
-//            if(piece.angleDirection == 0) {
-//                pointX = -.84f;
-//                pointY = 0;
-//            }
 
             q.set(impulseX, impulseY, pointX, pointY, nr + 1);
         }
@@ -196,12 +185,9 @@ public class PlayerControlSystem extends IteratingSystem {
             controller.bPressed = false;
             if(Info.activeMode == Info.PlayerMode.MOVING) {
                 Info.activeMode = Info.PlayerMode.BUILDING;
-//                engine.addSystem(new BuildingSystem(controller, game, engine));
-//                engine.addSystem(new RenderingBuildingSystem(game, engine, camera));
                 SystemManager.getInstance().toggleBuilding(true);
             } else if(Info.activeMode == Info.PlayerMode.BUILDING) {
                 Info.activeMode = Info.PlayerMode.MOVING;
-//                engine.removeSystem(engine.getSystem(BuildingSystem.class));
                 SystemManager.getInstance().toggleBuilding(false);
             }
         }
@@ -238,11 +224,10 @@ public class PlayerControlSystem extends IteratingSystem {
                     thrusterForces.get(i).forth,
                     true
             );
+            // TODO make this better | angular velocity is fixed unless user pressed A or D
+            if(controller.aDown || controller.dDown) angularVelocity = playerBody.getAngularVelocity();
 
-            int finalI = i;
-//            ShapeRenderingDebug.addToDrawThenRemove(() -> ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(finalI).third, thrusterForces.get(finalI).forth, .5f));
-//            ShapeRenderingDebug.addToDrawThenRemove(() -> ShapeRenderingDebug.drawDebugLine(0, 0, thrusterForces.get(finalI).third, thrusterForces.get(finalI).forth));
-            ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(finalI).third, thrusterForces.get(finalI).forth, .5f);
+            ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(i).third, thrusterForces.get(i).forth, .5f);
 
             thrusterForces.get(i).set(0f, 0f, 0f, 0f, 0);
             // TODO set speed limit, use normalization (.nor())

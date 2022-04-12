@@ -31,7 +31,8 @@ public class WorldFactory {
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
 
         generateBackground();
-        addEntities();
+        addPlayer();
+        createWalls();
     }
 
     public static WorldFactory getInstance(MainClass game, PooledEngine engine) {
@@ -49,19 +50,11 @@ public class WorldFactory {
         backgroundFactory.generate();
     }
 
-    private void addEntities() {
-        List<Entity> playerEntities = entitiesFactory.createShip(Info.ships.get(0), 10, 10, Info.playerActorId, true);
+    private void addPlayer() {
+        List<Entity> playerEntities = entitiesFactory.createShip(Info.ships.get(3), 10, 10, Info.playerActorId, true);
         for(Entity entity : playerEntities) engine.addEntity(entity);
-        List<Entity> enemyEntities = entitiesFactory.createShip(Info.ships.get(MathUtils.random(Info.ships.size() - 1)), 20, 10, 1, false);
-        for(Entity entity : enemyEntities) engine.addEntity(entity);
 
 
-//        List<Entity> playerEntities = entitiesFactory.createShip(Info.shipSample1, 10, 10, true);
-//        for(Entity entity : playerEntities) engine.addEntity(entity);
-//
-//        List<Entity> shipEntities = entitiesFactory.createShip(Info.shipSample0, 13, 12, false);
-//        for(Entity entity : shipEntities) engine.addEntity(entity);
-//
 //        for(int i = 0; i < 100; i++) engine.addEntity(entitiesFactory.createPiece(true, 0, 0));
 //
 //        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10));
@@ -70,6 +63,17 @@ public class WorldFactory {
 //        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10 + 3 * Info.blockSize));
 //        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10 + 4 * Info.blockSize));
 //        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10 + 5 * Info.blockSize));
+    }
+
+    private void createWalls() {
+        Entity wallEntity = entitiesFactory.createWall(Info.worldWidthLimit, 0, 1, Info.worldHeightLimit * 2);
+        engine.addEntity(wallEntity);
+        wallEntity = entitiesFactory.createWall(0, Info.worldHeightLimit, Info.worldWidthLimit * 2, 1);
+        engine.addEntity(wallEntity);
+        wallEntity = entitiesFactory.createWall(-Info.worldWidthLimit, 0, 1, Info.worldHeightLimit * 2);
+        engine.addEntity(wallEntity);
+        wallEntity = entitiesFactory.createWall(0, -Info.worldHeightLimit, Info.worldWidthLimit * 2, 1);
+        engine.addEntity(wallEntity);
     }
 
     public World getWorld() {

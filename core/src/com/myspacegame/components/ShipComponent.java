@@ -9,10 +9,4 @@ public class ShipComponent implements Component {
     public Piece core;
     public Array<Piece> piecesArray;
 
-
-
-    public Array<Array<Piece>> ship;
-    public int width = 1;
-    public int height = 1;
-
 }

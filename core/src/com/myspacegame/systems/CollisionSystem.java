@@ -5,14 +5,9 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.ashley.systems.IteratingSystem;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.physics.box2d.World;
 import com.myspacegame.MainClass;
 import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.PieceComponent;
-import com.myspacegame.factories.EntitiesFactory;
-import com.myspacegame.factories.WorldFactory;
 
 public class CollisionSystem extends IteratingSystem {
 
@@ -20,7 +15,6 @@ public class CollisionSystem extends IteratingSystem {
     private final ComponentMapper<PieceComponent> pieceMapper;
     private final ComponentMapper<BulletComponent> bulletMapper;
     private final ComponentMapper<TextureComponent> textureMapper;
-    private final EntitiesFactory entitiesFactory;
 
     public CollisionSystem(MainClass game, PooledEngine engine) {
         super(Family.all(CollisionComponent.class).one(PieceComponent.class, BulletComponent.class).get());
@@ -30,9 +24,7 @@ public class CollisionSystem extends IteratingSystem {
         bulletMapper = ComponentMapper.getFor(BulletComponent.class);
         textureMapper = ComponentMapper.getFor(TextureComponent.class);
 
-
-        World world = WorldFactory.getInstance(game, engine).getWorld();
-        entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
+        // TODO change thruster fixture shape
     }
 
     @Override
@@ -84,10 +76,6 @@ public class CollisionSystem extends IteratingSystem {
             bulletComponent.isDead = true;
             textureMapper.get(bulletEntity).textureRegion = null;
 
-//			getEngine().removeEntity(bulletEntity);
-//			getEngine().removeEntity(collidedEntity);
-//			System.out.println("bullet collided " + bulletComponent.createdByActorId + " actor: " + pieceComponent.piece.actorId);
-//			TextureComponent textureComponent = textureMapper.get(collidedEntity);
         }
     }
 

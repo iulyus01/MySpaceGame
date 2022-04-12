@@ -14,7 +14,6 @@ public class PieceComponent implements Component, Pool.Poolable {
     public Vector2 fixtureBottomLeft = new Vector2();
     public boolean isDead = false;
     public boolean isManuallyDetached = false;
-    public boolean toRecreateFixture = false;
     public boolean toRemoveAnchors = false;
 
     @Override
