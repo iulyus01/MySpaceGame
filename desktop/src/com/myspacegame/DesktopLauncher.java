@@ -9,8 +9,8 @@ public class DesktopLauncher {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 		config.setForegroundFPS(60);
 //		config.setIdleFPS(5); // this breaks camera.unproject for mouse world pos
-		config.setMaximized(true);
-//		config.setWindowedMode(800, 600);
+//		config.setMaximized(true);
+		config.setWindowedMode(800, 600);
 		config.setBackBufferConfig(8, 8, 8, 8, 16, 0, 3);
 		new Lwjgl3Application(new MainClass(), config);
 	}

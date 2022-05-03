@@ -22,6 +22,7 @@ public class EnemyGenerationSystem extends com.badlogic.ashley.systems.IntervalS
 
     private final List<Entity> enemies;
     private final int maxNrAlive = 5;
+    private int enemyActorIdCounter = 1;
 
     public EnemyGenerationSystem(MainClass game, PooledEngine engine) {
         super(.5f);
@@ -31,7 +32,7 @@ public class EnemyGenerationSystem extends com.badlogic.ashley.systems.IntervalS
         this.entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
 
         enemies = new ArrayList<>();
-        enemies.add(worldFactory.createEnemyRandomShip(20, 10));
+        enemies.add(worldFactory.createEnemyRandomShip(enemyActorIdCounter++, 20, 10));
     }
 
     @Override
@@ -40,7 +41,7 @@ public class EnemyGenerationSystem extends com.badlogic.ashley.systems.IntervalS
         if(enemies.size() < maxNrAlive) {
             float x = MathUtils.random(-Info.worldWidthLimit, Info.worldHeightLimit);
             float y = MathUtils.random(-Info.worldWidthLimit, Info.worldHeightLimit);
-            enemies.add(worldFactory.createEnemyRandomShip(x, y));
+            enemies.add(worldFactory.createEnemyRandomShip(enemyActorIdCounter++, x, y));
         }
     }
 

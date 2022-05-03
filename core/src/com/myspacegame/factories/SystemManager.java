@@ -60,7 +60,7 @@ public class SystemManager {
         engine.addSystem(new RenderingEndSystem(batch, shapeRenderer));
 
 
-        engine.addSystem(new DraggingSystem());
+        engine.addSystem(new DraggingSystem(worldFactory.getWorld()));
         engine.addSystem(new PlayerControlSystem(keyboardController, game, engine, camera));
         engine.addSystem(new BulletSystem(game, engine));
         engine.addSystem(new BackgroundSystem(engine, camera));
@@ -69,7 +69,7 @@ public class SystemManager {
         engine.addSystem(new EnemyGenerationSystem(game, engine));
 
 
-//        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
+        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
 
     }
 

@@ -1,6 +1,7 @@
 package com.myspacegame;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -50,10 +51,18 @@ public class Info {
     public static float mouseWorldY;
     public static float cameraWorldX;
     public static float cameraWorldY;
-    public static final float rad90Deg = 1.570f;
+    public static final float rad15Deg = (float) Math.PI / 12;
+    public static final float rad30Deg = (float) Math.PI / 6;
+    public static final float rad45Deg = (float) Math.PI / 4;
+    public static final float rad60Deg = (float) Math.PI / 3;
+    public static final float rad90Deg = (float) Math.PI / 2;
+    public static final float rad120Deg = (float) Math.PI / 1.5f;
+    public static final float rad180Deg = (float) Math.PI;
+    public static final float rad360Deg = (float) Math.PI * 2;
     public static Vector2 tempVector2 = new Vector2();
     public static TextureRegion testTexture;
-    public static final int playerActorId = 0;
+    public static int[] movementKeys = new int[]{Input.Keys.W, Input.Keys.A, Input.Keys.S, Input.Keys.D};
+
 
     // box2D
     public static final float PPM = 24.0f;
@@ -61,17 +70,17 @@ public class Info {
 //    public static final float blockSize = .24f;
     public static final float blockSize = .5f;
     public static final float maxPieceSize = 5 * blockSize;
-    public static final float defaultPieceDensity = 10f;
-//    public static final float defaultThrusterForce = 14f;
-    public static final float defaultThrusterForce = 140f;
-    public static final float defaultThrusterImpulse = 4f;
-    public static final float defaultBulletImpulse = 8f;
+    public static final float defaultPieceDensity = 4f;
+    public static final float defaultThrusterForce = 400f;
+    public static final float defaultThrusterImpulse = 7f;
+    public static final float defaultBulletImpulse = 10f;
     public static final float defaultBulletDensity = 1.8f;
-    public static final float defaultPieceLinearDamping = 0;
-    public static final float defaultPieceAngularDamping = 0;
-    public static final float maxHorVerVelocity = 8f; // maximum horizontal vertical speed
-
-
+    public static final float defaultPieceLinearDamping = 0.4f;
+    public static final float defaultPieceAngularDamping = 5;
+    public static final float defaultSinglePieceLinearDamping = 0.2f;
+    public static final float defaultSinglePieceAngularDamping = 0.2f;
+    public static final float defaultTractorBeamRadius = 40 * blockSize;
+    public static final float maxHorVerVelocity = 14f; // maximum horizontal vertical speed
 
     public static final short CATEGORY_PLAYER = 0x0001;  // 0000000000000001 in binary
     public static final short CATEGORY_BULLET = 0x0002; // 0000000000000010 in binary
@@ -82,6 +91,9 @@ public class Info {
     public static final short MASK_NOTHING = 0;
     public static final short MASK_PIECE_PLAYER = ~Info.CATEGORY_PLAYER;
 
+
+
+
     public static PlayerMode activeMode;
 
     public static Map<Integer, PieceConfig> pieceConfigsMap;
@@ -90,35 +102,39 @@ public class Info {
     // pieceId # edgeId edgeAnchorId id edgeAnchorId id # edgeId edgeAnchorId id
     public static List<String[]> ships;
 
+    // enums
     public enum PlayerMode {
         MOVING, BUILDING
     }
-
     public enum EntityType {
         PIECE, BULLET, WALL
     }
-
     public enum NPCType {
         ALLY, NEUTRAL, ENEMY
     }
-
-    public enum Key {
-        W, A, S, D
-    }
-
     public enum ZOrder {
         OTHERS(0), PIECE(3), WEAPONS(5), BULLETS(8), PIECE_DRAG(10), ANCHOR(15), HOVER_OVERLAY(20), WALL(30);
 
         private final int value;
-
         ZOrder(int value) {
             this.value = value;
         }
-
         public int getValue() {
             return value;
         }
     }
+    public enum StaticActorIds {
+        NONE(-1), PLAYER(0);
+
+        private final int value;
+        StaticActorIds(int value) {
+            this.value = value;
+        }
+        public int getValue() {
+            return value;
+        }
+    }
+
 
     public static class Pair<U, V> {
         public U first;
@@ -127,6 +143,23 @@ public class Info {
         public Pair(U first, V second) {
             this.first = first;
             this.second = second;
+        }
+
+        public void set(U first, V second) {
+            this.first = first;
+            this.second = second;
+        }
+    }
+
+    public static class Triple<A, B, C> {
+        public A first;
+        public B second;
+        public C third;
+
+        public Triple(A first, B second, C third) {
+            this.first = first;
+            this.second = second;
+            this.third = third;
         }
     }
 
@@ -191,7 +224,8 @@ public class Info {
         return vertices;
     }
 
-    public static Array<PieceEdge> edgesToComputedEdges(List<PieceEdge> edges, float multiplication) {
+    public static Array<PieceEdge> configEdgesToComputedEdges(List<PieceEdge> edges, float multiplication) {
+        // this basically makes the edge's size relative to block's size (block size as the multiplication)
         Array<PieceEdge> newEdges = new Array<>(false, edges.size(), PieceEdge.class);
         for(PieceEdge edge : edges) {
             PieceEdge newPieceEdge = new PieceEdge();
@@ -236,5 +270,53 @@ public class Info {
     public static float dist(float x1, float y1, float x2, float y2) {
         return (float) Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
     }
+
+    public static int parseFirstInteger(String nrS) {
+        int nr = 0;
+        for(int i = 0; i < nrS.length(); i++) {
+            if(nrS.charAt(i) < '0' || nrS.charAt(i) > '9') return nr;
+            nr = nr * 10 + (nrS.charAt(i) - '0');
+        }
+        return nr;
+    }
+/*
+
+    TODO make thruster image a full piece.. to be able to attach more one to other
+
+
+    TODO add tractor beam for pieces
+    TODO nice to make enemies autogenerated
+    TODO make a maze or something similar, with more and more advanced enemies till you get to the end
+    TODO story? you were lost in a mission to a far away station and now you have to get back to the teleporter and go back home
+    enemies are more and more powerful the further you go, you have to efficiently destroy enemies to obtain more pieces
+    to be able to progress further
+
+    what is this? and how does it work?
+    bodyComponent.body.setLinearVelocity(MathUtils.lerp(bodyComponent.body.getLinearVelocity().x, 0, 0.1f), bodyComponent.body.getLinearVelocity().y);
+
+    piece
+        - ship piece components:
+            1. TransformComponent
+            2. TextureComponent
+            3. PieceComponent
+            4. ShipComponent
+            5. Component specificPieceComponent
+            6. CollisionComponent
+            7. PlayerComponent / NPCComponent
+            8.? ShipCoreComponent
+        - alone piece components:
+            1. TransformComponent
+            2. TextureComponent
+            3. PieceComponent
+            4. Component specificPieceComponent
+            5. CollisionComponent
+
+
+
+
+
+*/
+
+
 
 }

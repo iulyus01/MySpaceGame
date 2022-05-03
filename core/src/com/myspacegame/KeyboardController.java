@@ -5,13 +5,9 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.IntIntMap;
 
 public class KeyboardController implements InputProcessor {
-
-    public boolean aDown;
-    public boolean dDown;
-    public boolean wDown;
-    public boolean sDown;
 
     public boolean bPressed = false;
 
@@ -19,58 +15,35 @@ public class KeyboardController implements InputProcessor {
     public boolean mouseRight;
     public boolean mouseMiddle;
     public boolean isDragged;
+    public boolean mouseRightPressed;
     public Vector2 mouseLocation = new Vector2();
+    public IntIntMap keysDown;
 
     private final OrthographicCamera camera;
 
     public KeyboardController(OrthographicCamera camera) {
         this.camera = camera;
+        keysDown = new IntIntMap(40);
     }
 
     @Override
     public boolean keyDown(int keycode) {
         boolean keyPressed = false;
-        switch(keycode) {
-            case Keys.A:
-                aDown = true;
-                keyPressed = true;
-                break;
-            case Keys.D:
-                dDown = true;
-                keyPressed = true;
-                break;
-            case Keys.W:
-                wDown = true;
-                keyPressed = true;
-                break;
-            case Keys.S:
-                sDown = true;
-                keyPressed = true;
-                break;
-        }
+        keysDown.put(keycode, 1);
+//        switch(keycode) {
+//            case Keys.A:
+//                aDown = true;
+//                keyPressed = true;
+//                break;
+//        }
         return keyPressed;
     }
 
     @Override
     public boolean keyUp(int keycode) {
         boolean keyPressed = false;
+        keysDown.put(keycode, 0);
         switch(keycode) {
-            case Keys.A:
-                aDown = false;
-                keyPressed = true;
-                break;
-            case Keys.D:
-                dDown = false;
-                keyPressed = true;
-                break;
-            case Keys.W:
-                wDown = false;
-                keyPressed = true;
-                break;
-            case Keys.S:
-                sDown = false;
-                keyPressed = true;
-                break;
             case Keys.B:
                 bPressed = true;
                 keyPressed = true;
@@ -92,6 +65,7 @@ public class KeyboardController implements InputProcessor {
                 break;
             case Input.Buttons.RIGHT:
                 mouseRight = true;
+                mouseRightPressed = true;
                 break;
             case Input.Buttons.MIDDLE:
                 mouseMiddle = true;

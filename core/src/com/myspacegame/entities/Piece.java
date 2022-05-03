@@ -42,7 +42,7 @@ public class Piece {
     public int pieceConfigId = 0;
     public float W = 0;
     public float H = 0;
-    public float hp = 5;
+    public float hp = 3;
     public int rotation = 0;
     public Vector2 pos = null;
     public Polygon shape;

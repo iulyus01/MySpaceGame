@@ -140,6 +140,7 @@ public class LoadingScreen implements Screen {
         game.assetManager.load("images/pieces/hull3x1.png", Texture.class);
         game.assetManager.load("images/pieces/thruster.png", Texture.class);
         game.assetManager.load("images/pieces/gun.png", Texture.class);
+        game.assetManager.load("images/pieces/TractorBeam.png", Texture.class);
         game.assetManager.load("images/bullet.png", Texture.class);
         game.assetManager.load("images/hover.png", Texture.class);
         game.assetManager.load("images/hover.png", Texture.class);

@@ -3,8 +3,10 @@ package com.myspacegame.factories;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
@@ -49,7 +51,7 @@ public class EntitiesFactory {
         ShipComponent shipComponent = engine.createComponent(ShipComponent.class);
         extractShipString(shipString, shipComponent, actorId);
 
-        Body body = bodyFactory.createPieceBody(shipX, shipY, 0);
+        Body body = bodyFactory.createPieceBody(shipX, shipY, 0, false);
 
         List<Entity> entities = new ArrayList<>();
 
@@ -76,35 +78,64 @@ public class EntitiesFactory {
         return entity;
     }
 
-    public Entity createPiece(boolean random, float bodyX, float bodyY) {
-        // TODO make this better
+    public Entity createPiece(Class<? extends Component> componentType, boolean random, float bodyX, float bodyY) {
         if(random) {
-            bodyX = (float) Math.random() * 40 - 20;
-            bodyY = (float) Math.random() * 40 - 20;
+            bodyX = (float) Math.random() * 60 - 30;
+            bodyY = (float) Math.random() * 60 - 30;
         }
-        Body body = bodyFactory.createPieceBody(bodyX, bodyY, 0);
-
-        int pieceX = 0;
-        int pieceY = 0;
-        int pieceWidth = 1;
-        int pieceHeight = 1;
-        float angleOrientationRad = 0;
 
         Entity entity = engine.createEntity();
+        Body body = bodyFactory.createPieceBody(bodyX, bodyY, 0, true);
 
-        TextureComponent textureComponent = createTextureComponent("images/hull.png");
-        TransformComponent transformComponent = createTransformComponent(Info.blockSize * pieceWidth, Info.blockSize * pieceHeight, 0, angleOrientationRad, textureComponent, Info.ZOrder.PIECE);
-        PieceComponent simplePieceComponent = createPieceComponent(pieceX, pieceY, pieceWidth, pieceHeight);
-        simplePieceComponent.fixture = bodyFactory.createPieceFixture(body, simplePieceComponent.piece, entity);
-        HullPieceComponent pieceComponent = createHullPieceComponent(simplePieceComponent.piece);
+
+        Component specificPieceComponent;
+        Piece piece;
+        int rotation = 0;
+        float angleOrientationRad = 0;
+        if(componentType == WeaponPieceComponent.class) {
+            piece = new WeaponPiece();
+            specificPieceComponent = createWeaponPieceComponent((WeaponPiece) piece);
+            piece.pieceConfigId = 4;
+        } else if(componentType == ThrusterPieceComponent.class) {
+            rotation = MathUtils.random(0, 3);
+            piece = new ThrusterPiece(rotation);
+            specificPieceComponent = createThrusterPieceComponent((ThrusterPiece) piece);
+            piece.pieceConfigId = 3;
+
+            angleOrientationRad = rotation * Info.rad90Deg;
+        } else {
+            piece = new HullPiece();
+            specificPieceComponent = createHullPieceComponent((HullPiece) piece);
+            piece.pieceConfigId = 1;
+        }
+        piece.actorId = Info.StaticActorIds.NONE.getValue();
+        piece.W = Info.blockSize * Info.pieceConfigsMap.get(piece.pieceConfigId).width;
+        piece.H = Info.blockSize * Info.pieceConfigsMap.get(piece.pieceConfigId).height;
+        piece.rotation = rotation;
+        piece.pos = new Vector2(0, 0);
+        piece.shape = new Polygon(Info.edgesToNewVerticesArray(Info.pieceConfigsMap.get(piece.pieceConfigId).edges, Info.blockSize));
+        piece.edges = Info.configEdgesToComputedEdges(Info.pieceConfigsMap.get(piece.pieceConfigId).edges, Info.blockSize);
+        piece.anchors = new Array<>();
+        for(int i = 0; i < piece.edges.size; i++) {
+            // i - edgeIndex
+            for(int j = 0; j < piece.edges.get(i).anchorRatios.size; j++) {
+                // j - edgeAnchorIndex
+                piece.anchors.add(new Anchor(i, j, null, piece));
+            }
+        }
+
+
+        TextureComponent textureComponent = createTextureComponent(Info.PIECE_TEXTURE_PATH + Info.pieceConfigsMap.get(piece.pieceConfigId).textureName);
+        TransformComponent transformComponent = createTransformComponent(piece.W, piece.H, 0, angleOrientationRad, textureComponent, Info.ZOrder.PIECE);
+        PieceComponent pieceComponent = createPieceComponent(piece);
+        pieceComponent.fixture = bodyFactory.createPieceFixture(body, pieceComponent.piece, entity);
+        pieceComponent.piece.pieceComponent = pieceComponent;
         CollisionComponent collisionComponent = createCollisionComponent();
 
-        simplePieceComponent.piece.pieceComponent = simplePieceComponent;
-
-        entity.add(simplePieceComponent);
-        entity.add(pieceComponent);
         entity.add(transformComponent);
         entity.add(textureComponent);
+        entity.add(pieceComponent);
+        entity.add(specificPieceComponent);
         entity.add(collisionComponent);
 
         return entity;
@@ -194,19 +225,23 @@ public class EntitiesFactory {
         Piece piece;
         switch(type.charAt(0)) {
             case '0':
-                piece = new CorePiece(0, 0, 0, 0);
+                piece = new CorePiece();
                 shipComponent.core = piece;
                 break;
-            case '1': default:
-                piece = new HullPiece(0, 0, 0, 0);
-                break;
-            case '2':
-                Info.Key[] possibleKeys = new Info.Key[]{Info.Key.W, Info.Key.A, Info.Key.S, Info.Key.D};
-                Info.Key key = possibleKeys["WASD".indexOf(type.charAt(1))];
-                piece = new ThrusterPiece(0, 0, 0, 0, rotation, key);
+            case '1': case '2': default:
+                piece = new HullPiece();
                 break;
             case '3':
-                piece = new WeaponPiece(0, 0, 0, 0);
+                int[] possibleKeys = new int[]{Input.Keys.W, Input.Keys.A, Input.Keys.S, Input.Keys.D};
+//                int key = possibleKeys["WASD".indexOf(type.charAt(1))];
+                int key = possibleKeys[rotation];
+                piece = new ThrusterPiece(rotation);
+                break;
+            case '4':
+                piece = new WeaponPiece();
+                break;
+            case '5':
+                piece = new TractorBeamPiece(Info.defaultTractorBeamRadius);
                 break;
         }
         return piece;
@@ -225,10 +260,10 @@ public class EntitiesFactory {
         for(int i = 0; i < capacity; i++) {
             String[] spliced = shipString[i].split("\\s+");
             int pieceIndex = Integer.parseInt(spliced[0]);
-            int rotation = Integer.parseInt(spliced[3]);
+            int rotation = Integer.parseInt(spliced[2]);
             Piece toAddPiece = getPieceType(spliced[1], rotation, shipComponent);
 
-            int pieceConfigId = Integer.parseInt(spliced[2]);
+            int pieceConfigId = Info.parseFirstInteger(spliced[1]);
 
 
             toAddPiece.actorId = actorId;
@@ -236,9 +271,9 @@ public class EntitiesFactory {
             toAddPiece.W = Info.blockSize * Info.pieceConfigsMap.get(pieceConfigId).width;
             toAddPiece.H = Info.blockSize * Info.pieceConfigsMap.get(pieceConfigId).height;
             toAddPiece.rotation = rotation;
-            toAddPiece.pos = new Vector2(Integer.parseInt(spliced[4]), Integer.parseInt(spliced[5]));
+            toAddPiece.pos = new Vector2(Integer.parseInt(spliced[3]), Integer.parseInt(spliced[4]));
             toAddPiece.shape = new Polygon(Info.edgesToNewVerticesArray(Info.pieceConfigsMap.get(pieceConfigId).edges, Info.blockSize));
-            toAddPiece.edges = Info.edgesToComputedEdges(Info.pieceConfigsMap.get(pieceConfigId).edges, Info.blockSize);
+            toAddPiece.edges = Info.configEdgesToComputedEdges(Info.pieceConfigsMap.get(pieceConfigId).edges, Info.blockSize);
 
             // if pieceIndex is higher than piecesNr it will crash
             // TODO not sure if i have to treat this case ^^
@@ -305,8 +340,11 @@ public class EntitiesFactory {
                 TextureRotatingComponent rotatingComponent = createTextureRotatingComponent(Info.PIECE_TEXTURE_PATH + "gun.png", 112, 112);
                 entity.add(rotatingComponent);
             } else if(piece instanceof ThrusterPiece) {
-                transformComponent = createTransformComponent(piece.W, piece.H, 0, ((ThrusterPiece) piece).angleDirection * Info.rad90Deg, textureComponent, Info.ZOrder.PIECE);
+                transformComponent = createTransformComponent(piece.W, piece.H, 0, piece.rotation * Info.rad90Deg, textureComponent, Info.ZOrder.PIECE);
                 specificPieceComponent = createThrusterPieceComponent((ThrusterPiece) piece);
+            } else if(piece instanceof TractorBeamPiece) {
+                transformComponent = createTransformComponent(piece.W, piece.H, 0, piece.rotation * Info.rad90Deg, textureComponent, Info.ZOrder.PIECE);
+                specificPieceComponent = createTractorBeamPieceComponent((TractorBeamPiece) piece);
             } else {
                 transformComponent = createTransformComponent(Info.blockSize, Info.blockSize, 0, 0, textureComponent, Info.ZOrder.PIECE);
             }
@@ -364,12 +402,6 @@ public class EntitiesFactory {
         return bodyComponent;
     }
 
-    private PieceComponent createPieceComponent(int pieceX, int pieceY, int pieceWidth, int pieceHeight) {
-        PieceComponent simplePieceComponent = engine.createComponent(PieceComponent.class);
-        simplePieceComponent.piece = new Piece(pieceX, pieceY, pieceWidth, pieceHeight, true);
-        return simplePieceComponent;
-    }
-
     private PieceComponent createPieceComponent(Piece piece) {
         PieceComponent simplePieceComponent = engine.createComponent(PieceComponent.class);
         simplePieceComponent.piece = piece;
@@ -382,27 +414,9 @@ public class EntitiesFactory {
         return corePieceComponent;
     }
 
-    private HullPieceComponent createHullPieceComponent(Piece piece) {
-        HullPieceComponent hullPieceComponent = engine.createComponent(HullPieceComponent.class);
-        hullPieceComponent.piece = new HullPiece(piece);
-        return hullPieceComponent;
-    }
-
     private HullPieceComponent createHullPieceComponent(HullPiece hullPiece) {
         HullPieceComponent hullPieceComponent = engine.createComponent(HullPieceComponent.class);
         hullPieceComponent.piece = hullPiece;
-        return hullPieceComponent;
-    }
-
-    private CorePieceComponent createCorePieceComponent(Piece piece) {
-        CorePieceComponent corePieceComponent = engine.createComponent(CorePieceComponent.class);
-        corePieceComponent.piece = new CorePiece(piece);
-        return corePieceComponent;
-    }
-
-    private ThrusterPieceComponent createThrusterPieceComponent(Piece piece, int angleRad) {
-        ThrusterPieceComponent hullPieceComponent = engine.createComponent(ThrusterPieceComponent.class);
-        hullPieceComponent.piece = new ThrusterPiece(piece, angleRad);
         return hullPieceComponent;
     }
 
@@ -412,16 +426,16 @@ public class EntitiesFactory {
         return hullPieceComponent;
     }
 
-    private WeaponPieceComponent createWeaponPieceComponent(Piece piece) {
-        WeaponPieceComponent weaponPieceComponent = engine.createComponent(WeaponPieceComponent.class);
-        weaponPieceComponent.piece = new WeaponPiece(piece);
-        return weaponPieceComponent;
-    }
-
     private WeaponPieceComponent createWeaponPieceComponent(WeaponPiece weaponPiece) {
         WeaponPieceComponent weaponPieceComponent = engine.createComponent(WeaponPieceComponent.class);
         weaponPieceComponent.piece = weaponPiece;
         return weaponPieceComponent;
+    }
+
+    private TractorBeamPieceComponent createTractorBeamPieceComponent(TractorBeamPiece tractorBeamPiece) {
+        TractorBeamPieceComponent tractorBeamPieceComponent = engine.createComponent(TractorBeamPieceComponent.class);
+        tractorBeamPieceComponent.piece = tractorBeamPiece;
+        return tractorBeamPieceComponent;
     }
 
     private BulletComponent createBulletComponent(int actorId) {

@@ -1,12 +1,11 @@
 package com.myspacegame.factories;
 
 import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.*;
 import com.myspacegame.Info;
-import com.myspacegame.components.BulletComponent;
-import com.myspacegame.components.pieces.PieceComponent;
+import com.myspacegame.components.ShipComponent;
 import com.myspacegame.entities.Piece;
-import com.myspacegame.entities.Projectile;
 
 public class BodyFactory {
 
@@ -48,14 +47,14 @@ public class BodyFactory {
         return fixtureDef;
     }
 
-    private BodyDef initBodyDef(Info.EntityType entityType) {
+    private BodyDef initBodyDef(Info.EntityType entityType, boolean single) {
         BodyDef bodyDef = new BodyDef();
         switch(entityType) {
             case PIECE:
                 bodyDef.type = BodyDef.BodyType.DynamicBody;
                 bodyDef.fixedRotation = false;
-                bodyDef.angularDamping = Info.defaultPieceAngularDamping;
-                bodyDef.linearDamping = Info.defaultPieceLinearDamping;
+                bodyDef.angularDamping = single ? Info.defaultSinglePieceAngularDamping : Info.defaultPieceAngularDamping;
+                bodyDef.linearDamping = single ? Info.defaultSinglePieceLinearDamping : Info.defaultPieceLinearDamping;
                 bodyDef.gravityScale = 0;
                 break;
             case BULLET:
@@ -70,8 +69,8 @@ public class BodyFactory {
         return bodyDef;
     }
 
-    public Body createPieceBody(float bodyX, float bodyY, float angle) {
-        BodyDef bodyDef = initBodyDef(Info.EntityType.PIECE);
+    public Body createPieceBody(float bodyX, float bodyY, float angle, boolean single) {
+        BodyDef bodyDef = initBodyDef(Info.EntityType.PIECE, single);
         bodyDef.position.x = bodyX;
         bodyDef.position.y = bodyY;
         bodyDef.angle = angle;
@@ -80,7 +79,7 @@ public class BodyFactory {
     }
 
     public Body createBulletBody(float x, float y, float width, float height, float angleRad, float impulse, Entity entity) {
-        BodyDef bodyDef = initBodyDef(Info.EntityType.BULLET);
+        BodyDef bodyDef = initBodyDef(Info.EntityType.BULLET, false);
         bodyDef.position.x = x;
         bodyDef.position.y = y;
         bodyDef.angle = angleRad;
@@ -107,7 +106,7 @@ public class BodyFactory {
     }
 
     public Body createWallBody(float x, float y, float width, float height, Entity entity) {
-        BodyDef bodyDef = initBodyDef(Info.EntityType.WALL);
+        BodyDef bodyDef = initBodyDef(Info.EntityType.WALL, false);
         bodyDef.position.x = x;
         bodyDef.position.y = y;
         bodyDef.angle = 0;
@@ -127,10 +126,10 @@ public class BodyFactory {
     }
 
     public Fixture createPieceFixture(Body body, Piece piece, Entity entity) {
-        float[] vertices = new float[piece.shape.getVertices().length];
-        for(int i = 0; i < piece.shape.getVertices().length;) {
-            vertices[i] = piece.shape.getVertices()[i] + piece.pos.x * Info.blockSize;
-            vertices[i + 1] = piece.shape.getVertices()[i + 1] + piece.pos.y * Info.blockSize;
+        float[] vertices = new float[piece.shape.getTransformedVertices().length];
+        for(int i = 0; i < piece.shape.getTransformedVertices().length;) {
+            vertices[i] = piece.shape.getTransformedVertices()[i] + piece.pos.x * Info.blockSize;
+            vertices[i + 1] = piece.shape.getTransformedVertices()[i + 1] + piece.pos.y * Info.blockSize;
             i += 2;
         }
 

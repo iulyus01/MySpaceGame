@@ -74,6 +74,7 @@ public class BuildingSystem extends IteratingSystem {
         transformMapper.get(hoverEntity).isHidden = !hoverIsActive;
         hoverIsActive = false;
 
+
         if(controller.isDragged) {
             if(isDraggingPieceBegin) {
                 draggingPieceBegin();
@@ -112,9 +113,9 @@ public class BuildingSystem extends IteratingSystem {
         Piece piece = pieceComponent.piece;
 
         Vector2 fixtureCenter = pieceComponent.fixtureCenter;
-        boolean closeToEntityX = Math.abs(Info.mouseWorldX - fixtureCenter.x) < Info.blockSize * piece.W * 4f;
-        boolean closeToEntityY = Math.abs(Info.mouseWorldY - fixtureCenter.y) < Info.blockSize * piece.H * 4f;
-        if(closeToEntityX && closeToEntityY) {
+        boolean isCursorCloseToEntityX = Math.abs(Info.mouseWorldX - fixtureCenter.x) < Info.blockSize * piece.W * 4f;
+        boolean isCursorCloseToEntityY = Math.abs(Info.mouseWorldY - fixtureCenter.y) < Info.blockSize * piece.H * 4f;
+        if(isCursorCloseToEntityX && isCursorCloseToEntityY) {
             // test mouse hover
             if(pieceComponent.fixture.testPoint(Info.mouseWorldX, Info.mouseWorldY)) {
                 updatePieceHoverTransform(transformMapper.get(hoverEntity), textureMapper.get(hoverEntity), transformMapper.get(entity));
@@ -135,7 +136,7 @@ public class BuildingSystem extends IteratingSystem {
     private void draggingPieceBegin() {
         DraggingComponent draggingComponent = engine.createComponent(DraggingComponent.class);
         draggingComponent.playerShipAngleRad = playerShipBody.getAngle();
-        draggingComponent.first = true;
+        draggingComponent.isBeforeFirstUpdate = true;
         draggingEntity.add(draggingComponent);
         draggingFixtureMask = draggedFixture.getFilterData().maskBits;
         draggedFixture.getFilterData().maskBits = Info.MASK_NOTHING;
@@ -152,13 +153,11 @@ public class BuildingSystem extends IteratingSystem {
 
     private void draggingPieceUpdate() {
         PieceComponent pieceComponent = pieceMapper.get(draggingEntity);
-
         Piece draggedPiece = pieceComponent.piece;
 
-        // idea
-        // the body(fixture) won't fix itself, but another entity used as a piece ghost will be fixed
-        // maybe
-        // i'll just draw lines... yea..
+        updatePieceHoverTransform(transformMapper.get(hoverEntity), textureMapper.get(hoverEntity), transformMapper.get(draggingEntity));
+        hoverIsActive = true;
+
         toAttachAnchors.clear();
         for(Piece shipPiece : playerShip.piecesArray) {
             if(shipPiece == null) continue;
@@ -184,6 +183,14 @@ public class BuildingSystem extends IteratingSystem {
                     }
                 }
 
+            }
+        }
+
+        if(controller.mouseRightPressed) {
+            controller.mouseRightPressed = false;
+            DraggingComponent draggingComponent = draggingEntity.getComponent(DraggingComponent.class);
+            if(draggingComponent != null) {
+                draggingComponent.toRotateRight = true;
             }
         }
     }
@@ -287,7 +294,7 @@ public class BuildingSystem extends IteratingSystem {
         transformComponent.scale.x = transformComponent.width / textureComponent.textureRegion.getRegionWidth();
         transformComponent.scale.y = transformComponent.height / textureComponent.textureRegion.getRegionHeight();
         transformComponent.angleRad = pieceTransform.angleRad;
-        transformComponent.angleOrientationRad = 0;
+        transformComponent.angleOrientationRad = pieceTransform.angleOrientationRad;
     }
 
 }

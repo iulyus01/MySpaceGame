@@ -8,5 +8,7 @@ public class ShipComponent implements Component {
 
     public Piece core;
     public Array<Piece> piecesArray;
+    public float localCenterAngle0X;
+    public float localCenterAngle0Y;
 
 }

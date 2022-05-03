@@ -7,6 +7,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.myspacegame.Info;
 import com.myspacegame.MainClass;
+import com.myspacegame.components.pieces.HullPieceComponent;
+import com.myspacegame.components.pieces.ThrusterPieceComponent;
+import com.myspacegame.components.pieces.WeaponPieceComponent;
 
 import java.util.List;
 
@@ -18,7 +21,6 @@ public class WorldFactory {
     private final BackgroundFactory backgroundFactory;
     private final EntitiesFactory entitiesFactory;
 
-
     private WorldFactory(MainClass game, PooledEngine engine) {
         this.engine = engine;
 
@@ -26,7 +28,6 @@ public class WorldFactory {
         world.setContactListener(new B2dContactListener());
         world.setContactFilter(new B2dContactFilter());
 
-        BodyFactory bodyFactory = BodyFactory.getInstance(world);
         backgroundFactory = BackgroundFactory.getInstance(game, engine, world);
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
 
@@ -40,8 +41,8 @@ public class WorldFactory {
         return instance;
     }
 
-    public Entity createEnemyRandomShip(float x, float y) {
-        List<Entity> enemyEntities = entitiesFactory.createShip(Info.ships.get(MathUtils.random(Info.ships.size() - 1)), x, y, 1, false);
+    public Entity createEnemyRandomShip(int actorId, float x, float y) {
+        List<Entity> enemyEntities = entitiesFactory.createShip(Info.ships.get(MathUtils.random(Info.ships.size() - 1)), x, y, actorId, false);
         for(Entity entity : enemyEntities) engine.addEntity(entity);
         return enemyEntities.get(0);
     }
@@ -51,18 +52,20 @@ public class WorldFactory {
     }
 
     private void addPlayer() {
-        List<Entity> playerEntities = entitiesFactory.createShip(Info.ships.get(3), 10, 10, Info.playerActorId, true);
+        List<Entity> playerEntities = entitiesFactory.createShip(Info.ships.get(3), 10, 10, Info.StaticActorIds.PLAYER.getValue(), true);
         for(Entity entity : playerEntities) engine.addEntity(entity);
 
 
-//        for(int i = 0; i < 100; i++) engine.addEntity(entitiesFactory.createPiece(true, 0, 0));
-//
-//        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10));
-//        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10 + Info.blockSize));
-//        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10 + 2 * Info.blockSize));
-//        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10 + 3 * Info.blockSize));
-//        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10 + 4 * Info.blockSize));
-//        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(false, 14 + i * Info.blockSize, 10 + 5 * Info.blockSize));
+
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(HullPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(WeaponPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(ThrusterPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(HullPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(WeaponPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(ThrusterPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(HullPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(WeaponPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 10; i++) engine.addEntity(entitiesFactory.createPiece(ThrusterPieceComponent.class, true, 0, 0));
     }
 
     private void createWalls() {
@@ -82,9 +85,5 @@ public class WorldFactory {
 
     public PooledEngine getEngine() {
         return engine;
-    }
-
-    public EntitiesFactory getEntitiesFactory() {
-        return entitiesFactory;
     }
 }

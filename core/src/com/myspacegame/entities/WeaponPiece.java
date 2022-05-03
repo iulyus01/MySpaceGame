@@ -2,14 +2,13 @@ package com.myspacegame.entities;
 
 public class WeaponPiece extends Piece {
 
-    public float angleRad;
+    public float angleRad = 0;
+    public float reloadingTimeMax = .2f;
+    public float reloadingTime = 0;
     public boolean fixedAngle = false;
+    public boolean isReloading = false;
 
-    public WeaponPiece(Piece piece) {
-        super(piece);
-    }
-
-    public WeaponPiece(int x, int y, int width, int height) {
-        super(x, y, width, height, true);
+    public WeaponPiece() {
+        super();
     }
 }

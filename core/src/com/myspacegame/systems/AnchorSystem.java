@@ -44,7 +44,7 @@ public class AnchorSystem extends IteratingSystem {
         PieceComponent pieceComponent = anchorComponent.piece.pieceComponent;
         TransformComponent transformComponent = transformMapper.get(entity);
 
-        if(anchorComponent.piece.actorId != Info.playerActorId) {
+        if(anchorComponent.piece.actorId > Info.StaticActorIds.PLAYER.getValue()) {
             anchorComponent.active = false;
         } else {
             anchorComponent.active = anchorComponent.anchor.piece == null;
@@ -66,8 +66,17 @@ public class AnchorSystem extends IteratingSystem {
 
         // get anchor pos relative to piece
         PieceEdge edge = piece.edges.get(anchor.edgeIndex);
-        anchor.pos.x = edge.x1 + edge.anchorRatios.get(anchor.edgeAnchorIndex) * (edge.x2 - edge.x1);
-        anchor.pos.y = edge.y1 + edge.anchorRatios.get(anchor.edgeAnchorIndex) * (edge.y2 - edge.y1);
+        try {
+            // TODO this is temporary for some random crash
+            anchor.pos.x = edge.x1 + edge.anchorRatios.get(anchor.edgeAnchorIndex) * (edge.x2 - edge.x1);
+            anchor.pos.y = edge.y1 + edge.anchorRatios.get(anchor.edgeAnchorIndex) * (edge.y2 - edge.y1);
+        } catch(IndexOutOfBoundsException e) {
+            System.out.println(e);
+            System.out.println("piece: " + Info.getPieceName(piece) + " actorId: " + piece.actorId + " " + piece.pos.x + " " + piece.pos.y);
+            System.out.println(edge);
+            System.out.println(edge.anchorRatios);
+            System.out.println(anchor.edgeAnchorIndex);
+        }
 
         // rotate anchor by piece rotation
         if(piece instanceof ThrusterPiece) {
