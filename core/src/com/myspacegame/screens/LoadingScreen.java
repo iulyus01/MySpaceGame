@@ -134,6 +134,9 @@ public class LoadingScreen implements Screen {
         game.assetManager.load("images/background/SmallDot1.png", Texture.class);
         game.assetManager.load("images/background/SmallDot2.png", Texture.class);
         game.assetManager.load("images/background/SmallDot3.png", Texture.class);
+        game.assetManager.load("images/background/Dot1.png", Texture.class);
+        game.assetManager.load("images/background/Dot2.png", Texture.class);
+        game.assetManager.load("images/background/Dot3.png", Texture.class);
 
         game.assetManager.load("images/pieces/core.png", Texture.class);
         game.assetManager.load("images/pieces/hull.png", Texture.class);
@@ -206,6 +209,7 @@ public class LoadingScreen implements Screen {
         String name = (String) piece.get("name");
         int width = (int) (long) piece.get("width");
         int height = (int) (long) piece.get("height");
+        float hp = (float) (double) piece.get("hp");
         String textureName = (String) piece.get("texture");
 
         List<PieceEdge> edges = new ArrayList<>();
@@ -230,6 +234,7 @@ public class LoadingScreen implements Screen {
         pieceConfig.name = name;
         pieceConfig.width = width;
         pieceConfig.height = height;
+        pieceConfig.hp = hp;
         pieceConfig.textureName = textureName;
         pieceConfig.edges = edges;
 

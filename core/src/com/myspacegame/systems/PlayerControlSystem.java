@@ -119,10 +119,16 @@ public class PlayerControlSystem extends IteratingSystem {
     }
 
     private void computeShipAutoRotation() {
+        float diffX = Info.mouseWorldX - playerBody.getWorldCenter().x;
+        float diffY = Info.mouseWorldY - playerBody.getWorldCenter().y;
+        if(Math.abs(diffX) < Info.blockSize * 3 && Math.abs(diffY) < Info.blockSize * 3) {
+            angleDiffRad = 0;
+            return;
+        }
 
         int playerBodyAngleRotations = (int) ((playerBody.getAngle() + Math.signum(playerBody.getAngle()) * Info.rad180Deg) / Info.rad360Deg);
         float playerBodyAngle = playerBody.getAngle() - playerBodyAngleRotations * Info.rad360Deg;
-        float cursorAngle = MathUtils.atan2(Info.mouseWorldY - playerBody.getWorldCenter().y, Info.mouseWorldX - playerBody.getWorldCenter().x);
+        float cursorAngle = MathUtils.atan2(diffY, diffX);
         angleDiffRad = cursorAngle - playerBodyAngle;
         if(Math.abs(Info.rad360Deg + angleDiffRad) < Math.abs(angleDiffRad)) angleDiffRad += Info.rad360Deg;
         else if((Math.abs(angleDiffRad - Info.rad360Deg) < Math.abs(angleDiffRad))) angleDiffRad -= Info.rad360Deg;
@@ -278,7 +284,7 @@ public class PlayerControlSystem extends IteratingSystem {
                     true
             );
 
-            ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(i).third, thrusterForces.get(i).forth, .5f);
+//            ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(i).third, thrusterForces.get(i).forth, .5f);
 
             thrusterForces.get(i).set(0f, 0f, 0f, 0f, 0);
             // TODO set speed limit, use normalization (.nor())

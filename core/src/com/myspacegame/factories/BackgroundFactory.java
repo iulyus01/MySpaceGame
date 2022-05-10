@@ -26,8 +26,9 @@ public class BackgroundFactory {
     private final World world;
     private final BodyFactory bodyFactory;
 
-    private final List<TextureRegion> bigDotTextures;
+//    private final List<TextureRegion> bigDotTextures;
     private final List<TextureRegion> smallDotTextures;
+    private final List<TextureRegion> dotTextures;
 
     private BackgroundFactory(MainClass game, Engine engine, World world) {
         this.game = game;
@@ -36,16 +37,20 @@ public class BackgroundFactory {
 
         bodyFactory = BodyFactory.getInstance(world);
 
-        bigDotTextures = new ArrayList<>();
-        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot1.png", Texture.class)));
-        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot12.png", Texture.class)));
-        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot2.png", Texture.class)));
-        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot3.png", Texture.class)));
-        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot4.png", Texture.class)));
+//        bigDotTextures = new ArrayList<>();
+//        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot1.png", Texture.class)));
+//        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot12.png", Texture.class)));
+//        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot2.png", Texture.class)));
+//        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot3.png", Texture.class)));
+//        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot4.png", Texture.class)));
         smallDotTextures = new ArrayList<>();
         smallDotTextures.add(new TextureRegion(game.assetManager.get("images/background/SmallDot1.png", Texture.class)));
         smallDotTextures.add(new TextureRegion(game.assetManager.get("images/background/SmallDot2.png", Texture.class)));
         smallDotTextures.add(new TextureRegion(game.assetManager.get("images/background/SmallDot3.png", Texture.class)));
+        dotTextures = new ArrayList<>();
+        dotTextures.add(new TextureRegion(game.assetManager.get("images/background/Dot1.png", Texture.class)));
+        dotTextures.add(new TextureRegion(game.assetManager.get("images/background/Dot2.png", Texture.class)));
+        dotTextures.add(new TextureRegion(game.assetManager.get("images/background/Dot3.png", Texture.class)));
     }
 
     public static BackgroundFactory getInstance(MainClass game, Engine engine, World world) {
@@ -54,63 +59,88 @@ public class BackgroundFactory {
     }
 
     public void generate() {
-        for(int i = 0; i < 1000; i++) {
-            float size = MathUtils.random(Info.blockSize / 8, Info.blockSize / 1.2f);
-            createSmallDot(engine.createEntity(), smallDotTextures.get(MathUtils.random(0, smallDotTextures.size() - 1)), size, size);
+        for(int i = 0; i < 50; i++) {
+            int index = MathUtils.random(0, smallDotTextures.size() - 1);
+            float size = MathUtils.random(Info.blockSize / 10, Info.blockSize / 1.2f);
+            createSmallDot(engine.createEntity(), index, size, size);
         }
-//        createBigDot(engine.createEntity(), bigDotTextures.get(3));
-//        createBigDot(engine.createEntity(), "images/background/BackgroundDot2.png");
-//        createBigDot(engine.createEntity(), "images/background/BackgroundDot2.png");
-//        createBigDot(engine.createEntity(), "images/background/BackgroundDot3.png");
-//        createBigDot(engine.createEntity(), "images/background/BackgroundDot3.png");
-//        createBigDot(engine.createEntity(), "images/background/BackgroundDot4.png");
+//        for(int i = 0; i < 10; i++) {
+//            int index = MathUtils.random(0, dotTextures.size() - 1);
+//            float size = MathUtils.random(Info.blockSize * 2, Info.blockSize * 20);
+//            createDot(engine.createEntity(), dotTextures.get(index), size, size);
+//        }
+
+//        createBigDot(engine.createEntity(), bigDotTextures.get(2));
     }
 
-    private void createBigDot(Entity entity, TextureRegion texture) {
+//    private void createBigDot(Entity entity, TextureRegion texture) {
+//        TextureComponent textureComponent = engine.createComponent(TextureComponent.class);
+//        textureComponent.textureRegion = texture;
+//        BackgroundComponent backgroundComponent = engine.createComponent(BackgroundComponent.class);
+//        backgroundComponent.backgroundTexture = texture;
+//
+//        TransformComponent transformComponent = engine.createComponent(TransformComponent.class);
+//        // transform x and y are irrelevant because they will change when cropping
+//        transformComponent.width = Info.W;
+//        transformComponent.height = Info.H;
+//        transformComponent.position.z = -2;
+//        float scale = Info.blockSize * 400 / textureComponent.textureRegion.getRegionWidth();
+//        transformComponent.scale.x = scale;
+//        transformComponent.scale.y = scale;
+//
+////        CropComponent cropComponent = engine.createComponent(CropComponent.class);
+////        cropComponent.srcX = 0;
+////        cropComponent.srcY = 0;
+////        cropComponent.srcWidth = Info.W;
+////        cropComponent.srcHeight = Info.H;
+////        cropComponent.region = new TextureRegion(texture.getTexture(), cropComponent.srcX, cropComponent.srcY, cropComponent.srcWidth, cropComponent.srcHeight);
+//
+//        BackgroundBigDotComponent bigDotComponent = engine.createComponent(BackgroundBigDotComponent.class);
+//        bigDotComponent.x = MathUtils.random(-Info.worldWidthLimit, Info.worldWidthLimit);
+//        bigDotComponent.y = MathUtils.random(-Info.worldHeightLimit, Info.worldHeightLimit);
+//        bigDotComponent.x = 0;
+//        bigDotComponent.y = 0;
+//        entity.add(backgroundComponent);
+//        entity.add(bigDotComponent);
+//        entity.add(textureComponent);
+//        entity.add(transformComponent);
+//        engine.addEntity(entity);
+//    }
+
+    private void createSmallDot(Entity entity, int index, float width, float height) {
         TextureComponent textureComponent = engine.createComponent(TextureComponent.class);
-        textureComponent.textureRegion = texture;
+        textureComponent.textureRegion = smallDotTextures.get(index);
 
         TransformComponent transformComponent = engine.createComponent(TransformComponent.class);
-//        transformComponent.position.x = MathUtils.random(-200f, 200f);
-//        transformComponent.position.y = MathUtils.random(-200f, 200f);
-        transformComponent.position.x = 10;
-        transformComponent.position.y = 10;
+        transformComponent.position.x = MathUtils.random(-Info.worldWidthLimit, Info.worldWidthLimit);
+        transformComponent.position.y = MathUtils.random(-Info.worldHeightLimit, Info.worldHeightLimit);
         transformComponent.position.z = -2;
-        float scale = Info.PIXELS_TO_METRES * 8;
-        transformComponent.scale.x = scale;
-        transformComponent.scale.y = scale;
-
-        CropComponent cropComponent = engine.createComponent(CropComponent.class);
-        cropComponent.srcX = 0;
-        cropComponent.srcY = 0;
-        cropComponent.srcWidth = Info.W;
-        cropComponent.srcHeight = Info.H;
-        cropComponent.region = new TextureRegion(texture.getTexture(), cropComponent.srcX, cropComponent.srcY, cropComponent.srcWidth, cropComponent.srcHeight);
+        transformComponent.scale.x = width / textureComponent.textureRegion.getRegionWidth();
+        transformComponent.scale.y = height / textureComponent.textureRegion.getRegionHeight();
+        transformComponent.angleRad = MathUtils.random(0, Info.rad360Deg);
 
         BackgroundComponent backgroundComponent = engine.createComponent(BackgroundComponent.class);
-        BackgroundBigDotComponent bigDotComponent = engine.createComponent(BackgroundBigDotComponent.class);
-//        bigDotComponent.x = MathUtils.random(-200f, 200f);
-//        bigDotComponent.y = MathUtils.random(-200f, 200f);
-        bigDotComponent.x = 10;
-        bigDotComponent.y = 10;
+        BackgroundSmallDotComponent smallDotComponent = engine.createComponent(BackgroundSmallDotComponent.class);
         entity.add(backgroundComponent);
-        entity.add(bigDotComponent);
+        entity.add(smallDotComponent);
         entity.add(textureComponent);
-        entity.add(cropComponent);
         entity.add(transformComponent);
         engine.addEntity(entity);
+
+        createDot(engine.createEntity(), index, width * 16, height * 16, transformComponent.position.x, transformComponent.position.y);
     }
 
-    private void createSmallDot(Entity entity,  TextureRegion texture, float width, float height) {
+    private void createDot(Entity entity, int index, float width, float height, float x, float y) {
         TextureComponent textureComponent = engine.createComponent(TextureComponent.class);
-        textureComponent.textureRegion = texture;
+        textureComponent.textureRegion = dotTextures.get(index);
 
         TransformComponent transformComponent = engine.createComponent(TransformComponent.class);
-        transformComponent.position.x = MathUtils.random(-200f, 200f);
-        transformComponent.position.y = MathUtils.random(-200f, 200f);
+        transformComponent.position.x = x;
+        transformComponent.position.y = y;
         transformComponent.position.z = -2;
-        transformComponent.scale.x = width / texture.getRegionWidth();
-        transformComponent.scale.y = height / texture.getRegionHeight();
+        transformComponent.scale.x = width / textureComponent.textureRegion.getRegionWidth();
+        transformComponent.scale.y = height / textureComponent.textureRegion.getRegionHeight();
+        transformComponent.angleRad = MathUtils.random(0, Info.rad360Deg);
 
         BackgroundComponent backgroundComponent = engine.createComponent(BackgroundComponent.class);
         BackgroundSmallDotComponent smallDotComponent = engine.createComponent(BackgroundSmallDotComponent.class);

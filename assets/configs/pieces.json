@@ -4,6 +4,7 @@
         "name": "core1x1",
         "width": 1,
         "height": 1,
+        "hp": 10.0,
         "texture": "core.png",
         "edges": [
             {
@@ -49,6 +50,7 @@
         "name": "hull1x1",
         "width": 1,
         "height": 1,
+        "hp": 3.0,
         "texture": "hull.png",
         "edges": [
             {
@@ -94,6 +96,7 @@
         "name": "hull3x1",
         "width": 3,
         "height": 1,
+        "hp": 6.0,
         "texture": "hull3x1.png",
         "edges": [
             {
@@ -143,6 +146,7 @@
         "name": "thruster1x1",
         "width": 1,
         "height": 1,
+        "hp": 3.0,
         "texture": "thruster.png",
         "edges": [
             {
@@ -182,6 +186,7 @@
         "name": "weapon1x1",
         "width": 1,
         "height": 1,
+        "hp": 3.0,
         "texture": "hull.png",
         "edges": [
             {
@@ -227,6 +232,7 @@
         "name": "TractorBeam1x1",
         "width": 1,
         "height": 1,
+        "hp": 3.0,
         "texture": "TractorBeam.png",
         "edges": [
             {
@@ -258,6 +264,110 @@
                 "x2": 0.5,
                 "y2": -0.5,
                 "anchors": []
+            }
+        ]
+    },
+    {
+        "id": 6,
+        "name": "hull2x2",
+        "width": 2,
+        "height": 2,
+        "hp": 8.0,
+        "texture": "hull.png",
+        "edges": [
+            {
+                "x1": 1.0,
+                "y1": -1.0,
+                "x2": 1.0,
+                "y2": 1.0,
+                "anchors": [
+                    0.25,
+                    0.75
+                ]
+            },
+            {
+                "x1": 1.0,
+                "y1": 1.0,
+                "x2": -1.0,
+                "y2": 1.0,
+                "anchors": [
+                    0.25,
+                    0.75
+                ]
+            },
+            {
+                "x1": -1.0,
+                "y1": 1.0,
+                "x2": -1.0,
+                "y2": -1.0,
+                "anchors": [
+                    0.25,
+                    0.75
+                ]
+            },
+            {
+                "x1": -1.0,
+                "y1": -1.0,
+                "x2": 1.0,
+                "y2": -1.0,
+                "anchors": [
+                    0.25,
+                    0.75
+                ]
+            }
+        ]
+    },
+    {
+        "id": 7,
+        "name": "hull3x3",
+        "width": 3,
+        "height": 3,
+        "hp": 18.0,
+        "texture": "hull.png",
+        "edges": [
+            {
+                "x1": 1.5,
+                "y1": -1.5,
+                "x2": 1.5,
+                "y2": 1.5,
+                "anchors": [
+                    0.166,
+                    0.5,
+                    0.833
+                ]
+            },
+            {
+                "x1": 1.5,
+                "y1": 1.5,
+                "x2": -1.5,
+                "y2": 1.5,
+                "anchors": [
+                    0.166,
+                    0.5,
+                    0.833
+                ]
+            },
+            {
+                "x1": -1.5,
+                "y1": 1.5,
+                "x2": -1.5,
+                "y2": -1.5,
+                "anchors": [
+                    0.166,
+                    0.5,
+                    0.833
+                ]
+            },
+            {
+                "x1": -1.5,
+                "y1": -1.5,
+                "x2": 1.5,
+                "y2": -1.5,
+                "anchors": [
+                    0.166,
+                    0.5,
+                    0.833
+                ]
             }
         ]
     }

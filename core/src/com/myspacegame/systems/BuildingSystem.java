@@ -3,7 +3,6 @@ package com.myspacegame.systems;
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
@@ -75,7 +74,7 @@ public class BuildingSystem extends IteratingSystem {
         hoverIsActive = false;
 
 
-        if(controller.isDragged) {
+        if(controller.mouseLeft) {
             if(isDraggingPieceBegin) {
                 draggingPieceBegin();
                 isDraggingPiece = true;
@@ -229,7 +228,7 @@ public class BuildingSystem extends IteratingSystem {
 
             float[] pieceVertices = pieceComponent.piece.shape.getVertices();
             Polygon piecePolygon = new Polygon(pieceVertices);
-            piecePolygon.setRotation(pieceComponent.fixture.getBody().getAngle() * MathUtils.radDeg);
+            piecePolygon.setRotation(pieceComponent.piece.shape.getRotation());
             piecePolygon.setPosition(pieceComponent.fixtureCenter.x + offsetX, pieceComponent.fixtureCenter.y + offsetY);
             piecePolygon.setScale(.9f, .9f);
             ShapeRenderingDebug.addToDrawWithId(() -> ShapeRenderingDebug.drawDebugPolygon(piecePolygon.getTransformedVertices()), 2, 2000);
@@ -269,8 +268,11 @@ public class BuildingSystem extends IteratingSystem {
         piece.pos.y = Math.round(((pieceComponent.fixtureCenter.y + offsetY - shipComponent.core.pieceComponent.fixtureCenter.y) / Info.blockSize) * 2) / 2f;
 
         for(var pair : attachAnchors) {
-            entitiesFactory.removeAnchorEntity(pair.first);
-            entitiesFactory.removeAnchorEntity(pair.second);
+
+//            pair.first.anchorComponent.toRemove = true;
+//            pair.second.anchorComponent.toRemove = true;
+//            entitiesFactory.removeAnchorEntity(pair.first);
+//            entitiesFactory.removeAnchorEntity(pair.second);
             pair.first.piece = piece;
             pair.second.piece = pair.first.srcPiece;
         }

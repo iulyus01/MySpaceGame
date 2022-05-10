@@ -2,13 +2,13 @@ package com.myspacegame.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.Transform;
 import com.myspacegame.Info;
 import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.PieceComponent;
 import com.myspacegame.entities.Anchor;
 import com.myspacegame.entities.Piece;
-import com.myspacegame.entities.ThrusterPiece;
 import com.myspacegame.utils.PieceEdge;
 
 public class AnchorSystem extends IteratingSystem {
@@ -44,6 +44,11 @@ public class AnchorSystem extends IteratingSystem {
         PieceComponent pieceComponent = anchorComponent.piece.pieceComponent;
         TransformComponent transformComponent = transformMapper.get(entity);
 
+        if(anchorComponent.toRemove) {
+            getEngine().removeEntity(entity);
+            return;
+        }
+
         if(anchorComponent.piece.actorId > Info.StaticActorIds.PLAYER.getValue()) {
             anchorComponent.active = false;
         } else {
@@ -71,17 +76,18 @@ public class AnchorSystem extends IteratingSystem {
             anchor.pos.x = edge.x1 + edge.anchorRatios.get(anchor.edgeAnchorIndex) * (edge.x2 - edge.x1);
             anchor.pos.y = edge.y1 + edge.anchorRatios.get(anchor.edgeAnchorIndex) * (edge.y2 - edge.y1);
         } catch(IndexOutOfBoundsException e) {
-            System.out.println(e);
+            e.printStackTrace();
             System.out.println("piece: " + Info.getPieceName(piece) + " actorId: " + piece.actorId + " " + piece.pos.x + " " + piece.pos.y);
             System.out.println(edge);
             System.out.println(edge.anchorRatios);
             System.out.println(anchor.edgeAnchorIndex);
+            Gdx.app.exit();
         }
 
         // rotate anchor by piece rotation
-        if(piece instanceof ThrusterPiece) {
-            anchor.pos.rotateRad(piece.rotation * Info.rad90Deg);
-        }
+//        if(piece instanceof ThrusterPiece) {
+        anchor.pos.rotateRad(piece.rotation * Info.rad90Deg);
+//        }
 
         // change anchor pos relative to ship
         anchor.pos.x += piece.pos.x * Info.blockSize;

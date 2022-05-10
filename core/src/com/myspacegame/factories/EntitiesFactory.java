@@ -3,7 +3,6 @@ package com.myspacegame.factories;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -96,6 +95,10 @@ public class EntitiesFactory {
             piece = new WeaponPiece();
             specificPieceComponent = createWeaponPieceComponent((WeaponPiece) piece);
             piece.pieceConfigId = 4;
+
+            // 112 comes from image gun.png, 112 pos on x and 112 on y
+            TextureRotatingComponent rotatingComponent = createTextureRotatingComponent(Info.PIECE_TEXTURE_PATH + "gun.png", 112, 112);
+            entity.add(rotatingComponent);
         } else if(componentType == ThrusterPieceComponent.class) {
             rotation = MathUtils.random(0, 3);
             piece = new ThrusterPiece(rotation);
@@ -106,11 +109,15 @@ public class EntitiesFactory {
         } else {
             piece = new HullPiece();
             specificPieceComponent = createHullPieceComponent((HullPiece) piece);
-            piece.pieceConfigId = 1;
+            int rand = MathUtils.random(1, 3);
+            if(rand == 2) rand = 6;
+            else if(rand == 3) rand = 7;
+            piece.pieceConfigId = rand;
         }
         piece.actorId = Info.StaticActorIds.NONE.getValue();
         piece.W = Info.blockSize * Info.pieceConfigsMap.get(piece.pieceConfigId).width;
         piece.H = Info.blockSize * Info.pieceConfigsMap.get(piece.pieceConfigId).height;
+        piece.hp = Info.pieceConfigsMap.get(piece.pieceConfigId).hp;
         piece.rotation = rotation;
         piece.pos = new Vector2(0, 0);
         piece.shape = new Polygon(Info.edgesToNewVerticesArray(Info.pieceConfigsMap.get(piece.pieceConfigId).edges, Info.blockSize));
@@ -137,6 +144,11 @@ public class EntitiesFactory {
         entity.add(pieceComponent);
         entity.add(specificPieceComponent);
         entity.add(collisionComponent);
+
+        for(Anchor a : piece.anchors) {
+            Entity anchorEntity = createAnchorEntity(pieceComponent, a, false);
+            engine.addEntity(anchorEntity);
+        }
 
         return entity;
     }
@@ -183,7 +195,7 @@ public class EntitiesFactory {
         transformComponent.position.z = Info.ZOrder.ANCHOR.getValue();
         transformComponent.scale.x = transformComponent.width / anchorTexture.getRegionWidth();
         transformComponent.scale.y = transformComponent.height / anchorTexture.getRegionHeight();
-        transformComponent.isHidden = (Math.abs(pieceComponent.fixtureCenter.x - Info.mouseWorldX) > Info.blockSize * 20 || Math.abs(pieceComponent.fixtureCenter.y - Info.mouseWorldY) > Info.blockSize * 20);
+//        transformComponent.isHidden = (Math.abs(pieceComponent.fixtureCenter.x - Info.mouseWorldX) > Info.blockSize * 20 || Math.abs(pieceComponent.fixtureCenter.y - Info.mouseWorldY) > Info.blockSize * 20);
 
         anchor.anchorComponent = anchorComponent;
 
@@ -208,12 +220,6 @@ public class EntitiesFactory {
         return entity;
     }
 
-    public void removeAnchorEntity(Anchor anchor) {
-        if(anchor.anchorComponent == null) return;
-        anchor.anchorComponent.toRemove = true;
-        System.out.println("test remove anchor entity");
-    }
-
     public void removePieceHoverEntity(Entity entity) {
         engine.removeEntity(entity);
     }
@@ -232,9 +238,6 @@ public class EntitiesFactory {
                 piece = new HullPiece();
                 break;
             case '3':
-                int[] possibleKeys = new int[]{Input.Keys.W, Input.Keys.A, Input.Keys.S, Input.Keys.D};
-//                int key = possibleKeys["WASD".indexOf(type.charAt(1))];
-                int key = possibleKeys[rotation];
                 piece = new ThrusterPiece(rotation);
                 break;
             case '4':
@@ -270,6 +273,7 @@ public class EntitiesFactory {
             toAddPiece.pieceConfigId = pieceConfigId;
             toAddPiece.W = Info.blockSize * Info.pieceConfigsMap.get(pieceConfigId).width;
             toAddPiece.H = Info.blockSize * Info.pieceConfigsMap.get(pieceConfigId).height;
+            toAddPiece.hp = Info.pieceConfigsMap.get(pieceConfigId).hp;
             toAddPiece.rotation = rotation;
             toAddPiece.pos = new Vector2(Integer.parseInt(spliced[3]), Integer.parseInt(spliced[4]));
             toAddPiece.shape = new Polygon(Info.edgesToNewVerticesArray(Info.pieceConfigsMap.get(pieceConfigId).edges, Info.blockSize));
@@ -318,7 +322,7 @@ public class EntitiesFactory {
         for(Piece piece : array) {
             Entity entity = engine.createEntity();
 
-            TransformComponent transformComponent = null;
+            TransformComponent transformComponent;
             PieceComponent pieceComponent = createPieceComponent(piece);
             pieceComponent.fixture = bodyFactory.createPieceFixture(body, pieceComponent.piece, entity);
             Component specificPieceComponent = null;

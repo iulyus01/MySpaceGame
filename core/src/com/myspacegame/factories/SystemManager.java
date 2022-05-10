@@ -54,8 +54,8 @@ public class SystemManager {
         engine.addSystem(new PieceSystem(game, engine));
         // rendering
         engine.addSystem(renderingBeginSystem);
-        engine.addSystem(new RenderingBackgroundSystem(batch, shapeRenderer));
-        engine.addSystem(new RenderingSystem(batch, shapeRenderer));
+//        engine.addSystem(new RenderingBackgroundSystem(batch, shapeRenderer));
+        engine.addSystem(new RenderingSystem(batch));
         engine.addSystem(new RenderingRotatingSystem(batch));
         engine.addSystem(new RenderingEndSystem(batch, shapeRenderer));
 
@@ -63,13 +63,13 @@ public class SystemManager {
         engine.addSystem(new DraggingSystem(worldFactory.getWorld()));
         engine.addSystem(new PlayerControlSystem(keyboardController, game, engine, camera));
         engine.addSystem(new BulletSystem(game, engine));
-        engine.addSystem(new BackgroundSystem(engine, camera));
+        engine.addSystem(new BackgroundSystem(camera));
         engine.addSystem(new CollisionSystem(game, engine));
 
         engine.addSystem(new EnemyGenerationSystem(game, engine));
 
 
-        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
+//        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
 
     }
 

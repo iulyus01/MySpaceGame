@@ -7,13 +7,10 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.IdentityMap;
-import com.badlogic.gdx.utils.ObjectMap;
 import com.myspacegame.Info;
 import com.myspacegame.MainClass;
 import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.PieceComponent;
-import com.myspacegame.components.pieces.TractorBeamPieceComponent;
 import com.myspacegame.entities.Anchor;
 import com.myspacegame.entities.CorePiece;
 import com.myspacegame.entities.Piece;
@@ -29,7 +26,6 @@ public class PieceSystem extends IteratingSystem {
     private final ComponentMapper<PieceComponent> pieceMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<ShipComponent> shipMapper;
-    private final ComponentMapper<PlayerComponent> playerMapper;
 
     private final BodyFactory bodyFactory;
     private final Array<Piece> toDetach;
@@ -44,7 +40,6 @@ public class PieceSystem extends IteratingSystem {
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         shipMapper = ComponentMapper.getFor(ShipComponent.class);
-        playerMapper = ComponentMapper.getFor(PlayerComponent.class);
 
         toDetach = new Array<>(false, 16, Piece.class);
         tractorBeamPieces = new com.badlogic.gdx.utils.ObjectSet<>(8);
@@ -54,28 +49,11 @@ public class PieceSystem extends IteratingSystem {
     @Override
     public void update(float deltaTime) {
         super.update(deltaTime);
-//        System.out.println();
-//        System.out.println();
-//        System.out.println();
-//        System.out.println();
-//        System.out.println();
-//        System.out.println();
-//        System.out.println();
 
     }
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
-        if(!shipMapper.has(entity)) {
-//            System.out.println("this: ");
-//            for(var it = entity.getComponents().iterator(); it.hasNext();) {
-//                Component c = it.next();
-//                System.out.println(c.getClass().getName());
-//            }
-//            System.out.println();
-        }
-
-
         PieceComponent pieceComponent = pieceMapper.get(entity);
         TransformComponent transformComponent = transformMapper.get(entity);
 
@@ -86,6 +64,7 @@ public class PieceSystem extends IteratingSystem {
         if(pieceComponent.isDead) {
             detachPiece(pieceComponent.piece, entity, false);
             // isDead will be reset when entity is removed (component pooling)
+            removeAnchorEntities(pieceComponent.piece);
             return;
         }
         if(pieceComponent.isManuallyDetached) {
@@ -122,34 +101,39 @@ public class PieceSystem extends IteratingSystem {
         removeAnchors(piece, entity);
         if(recreateFixture) recreateFixture(bodyFactory, piece.pieceComponent, entity);
         else destroyPiece(piece.pieceComponent, entity);
+//        if(true) return;
 
-        Array<Piece> toDetachArray = new Array<>(16);
+        Array<Piece> toDetachQueue = new Array<>(16);
         for(Piece toDetachPieceStart : toDetach) {
             int k = 0;
-            toDetachArray.add(toDetachPieceStart);
-            while(k < toDetachArray.size) {
-                if(toDetachArray.get(k) instanceof CorePiece) {
-                    for(int i = 0; i < toDetachArray.size; i++) {
-                        toDetachArray.get(i).checked = 2;
+            toDetachQueue.clear();
+            toDetachQueue.add(toDetachPieceStart);
+            while(k < toDetachQueue.size) {
+                if(toDetachQueue.get(k) instanceof CorePiece) {
+                    for(int i = 0; i < toDetachQueue.size; i++) {
+                        toDetachQueue.get(i).checked = 2;
                     }
-                    toDetachArray.clear();
+                    toDetachQueue.clear();
                     break;
                 }
-                toDetachArray.get(k).checked = 1;
+                toDetachQueue.get(k).checked = 1;
 
-                for(Anchor anchor : toDetachArray.get(k).anchors) {
+                for(Anchor anchor : toDetachQueue.get(k).anchors) {
                     if(anchor.piece == null) continue;
                     if(anchor.piece.checked == 1) continue;
                     if(anchor.piece.checked == 2) {
-                        toDetachArray.clear();
+                        for(int i = 0; i < toDetachQueue.size; i++) {
+                            toDetachQueue.get(i).checked = 2;
+                        }
+                        toDetachQueue.clear();
                         break;
                     }
-                    toDetachArray.add(anchor.piece);
+                    toDetachQueue.add(anchor.piece);
                 }
                 k++;
             }
 
-            for(Piece detachingPiece : toDetachArray) {
+            for(Piece detachingPiece : toDetachQueue) {
                 detachingPiece.pieceComponent.toRemoveAnchors = true;
             }
         }
@@ -199,6 +183,12 @@ public class PieceSystem extends IteratingSystem {
         engine.removeEntity(entity);
     }
 
+    private void removeAnchorEntities(Piece piece) {
+        for(Anchor anchor : piece.anchors) {
+            anchor.anchorComponent.toRemove = true;
+        }
+    }
+
     private void tractorBeamPiece(TractorBeamPiece piece) {
         if(!piece.activated) {
             tractorBeamPieces.remove(piece);
@@ -224,7 +214,6 @@ public class PieceSystem extends IteratingSystem {
         }
         ShapeRenderingDebug.drawDebugLine(pieceComponent.fixtureCenter.x, pieceComponent.fixtureCenter.y, destPiece.pieceComponent.fixtureCenter.x, destPiece.pieceComponent.fixtureCenter.y);
         float angle = MathUtils.atan2( destPiece.pieceComponent.fixtureCenter.y - pieceComponent.fixtureCenter.y, destPiece.pieceComponent.fixtureCenter.x - pieceComponent.fixtureCenter.x);
-        System.out.println(angle * MathUtils.radDeg);
         if(distMin < 30 * Info.blockSize) {
             angle += Info.rad90Deg * 2;
         }

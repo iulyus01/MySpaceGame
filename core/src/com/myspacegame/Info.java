@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
@@ -197,7 +198,9 @@ public class Info {
 
     public static void init() {
 //        colorClear = new Color(.184f, .215f, .258f, .4f);
-        colorClear = new Color(0.06f, 0, 0.07f, 1);
+//        colorClear = new Color(0.06f, 0, 0.07f, 1);
+//        colorClear = new Color(0.023f, 0.207f, 0.239f, 1);
+        colorClear = new Color(0.137f, 0.121f, 0.125f, 1);
 
         colorCyan = new Color(.160f, .713f, .964f, 1);
         colorBlue = new Color(.129f, .588f, .952f, 1);
@@ -240,6 +243,24 @@ public class Info {
             newEdges.add(newPieceEdge);
         }
         return newEdges;
+    }
+
+    public static void rotateEdges(Array<PieceEdge> edges, float angleRad) {
+        float sin = MathUtils.sin(angleRad);
+        float cos = MathUtils.cos(angleRad);
+        float xNew;
+        float yNew;
+        for(PieceEdge edge : edges) {
+            xNew = Math.round((edge.x1 * cos - edge.y1 * sin) * 1000) / 1000f;
+            yNew = Math.round((edge.x1 * sin + edge.y1 * cos) * 1000) / 1000f;
+            edge.x1 = xNew;
+            edge.y1 = yNew;
+
+            xNew = Math.round((edge.x2 * cos - edge.y2 * sin) * 1000) / 1000f;
+            yNew = Math.round((edge.x2 * sin + edge.y2 * cos) * 1000) / 1000f;
+            edge.x2 = xNew;
+            edge.y2 = yNew;
+        }
     }
 
     public static void computePieceFixtureCenter(PieceComponent pieceComponent) {

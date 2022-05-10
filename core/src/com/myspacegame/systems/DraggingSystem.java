@@ -1,5 +1,6 @@
 package com.myspacegame.systems;
 
+import com.badlogic.ashley.core.Component;
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
@@ -94,12 +95,12 @@ public class DraggingSystem extends IteratingSystem {
 
         pieceComponent.piece.rotation = (pieceComponent.piece.rotation + 1) % 4;
         pieceComponent.piece.shape.setRotation(pieceComponent.piece.rotation * 90);
-
         transformComponent.angleOrientationRad = pieceComponent.piece.rotation * Info.rad90Deg;
+
         pieceComponent.fixture.getBody().destroyFixture(pieceComponent.fixture);
         bodyFactory.createPieceFixture(body, pieceComponent.piece, entity);
 
-        pieceComponent.piece.shape.setRotation(0);
+//        Info.rotateEdges(pieceComponent.piece.edges, Info.rad90Deg);
     }
 
 }

@@ -57,38 +57,4 @@ public class Piece {
 
     }
 
-    public Piece(Piece piece) {
-        this.pieceConfigId = piece.pieceConfigId;
-        this.W = piece.W;
-        this.H = piece.H;
-        this.pos = new Vector2(piece.pos);
-        this.shape = new Polygon(piece.shape.getVertices().clone());
-        // TODO not sure if this case exists, where the anchors and PieceComponent are the same
-        this.anchors = piece.anchors;
-        this.pieceComponent = piece.pieceComponent;
-    }
-
-    public Piece(int x, int y, int width, int height, boolean defaultAnchors) {
-//        this.x = x;
-//        this.y = y;
-//        this.width = width;
-//        this.height = height;
-//
-//        if(width != height) this.angleToCenterRad = (float) Math.atan2(height, 2);
-//        else this.angleToCenterRad = 0.785f;
-//        this.diagonalLength = (float) Math.sqrt((Info.blockSize * width) * (Info.blockSize * width) + (Info.blockSize * height) * (Info.blockSize * height));
-//
-//        if(defaultAnchors) {
-//            anchors = new Array<>(false, (width + height) * 2, Info.Pair.class);
-//            for(int i = 0; i < width; i++) {
-//                anchors.add(new Info.Pair<>(new Info.Anchor(i, 0, 1), true));
-//                anchors.add(new Info.Pair<>(new Info.Anchor(i, height - 1, 3), true));
-//            }
-//            for(int i = 0; i < height; i++) {
-//                anchors.add(new Info.Pair<>(new Info.Anchor(0, i, 2), true));
-//                anchors.add(new Info.Pair<>(new Info.Anchor(width - 1, i, 0), true));
-//            }
-//        }
-    }
-
 }
