@@ -2,10 +2,12 @@ package com.myspacegame.factories;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 import com.myspacegame.Info;
 import com.myspacegame.MainClass;
 import com.myspacegame.components.CropComponent;
@@ -26,9 +28,10 @@ public class BackgroundFactory {
     private final World world;
     private final BodyFactory bodyFactory;
 
-//    private final List<TextureRegion> bigDotTextures;
-    private final List<TextureRegion> smallDotTextures;
-    private final List<TextureRegion> dotTextures;
+    private final Array<Color> backgroundColors;
+    //    private final List<TextureRegion> bigDotTextures;
+    private final Array<TextureRegion> smallDotTextures;
+    private final Array<TextureRegion> dotTextures;
 
     private BackgroundFactory(MainClass game, Engine engine, World world) {
         this.game = game;
@@ -37,17 +40,25 @@ public class BackgroundFactory {
 
         bodyFactory = BodyFactory.getInstance(world);
 
+        backgroundColors = new Array<>(true, 3, Color.class);
+        backgroundColors.add(new Color(0.086f, 0.169f, 0.149f, 1));
+        backgroundColors.add(new Color(0.082f, 0.125f, 0.157f, 1));
+        backgroundColors.add(new Color(0.071f, 0.082f, 0.129f, 1));
+        backgroundColors.add(new Color(0.094f, 0.071f, 0.149f, 1));
+        backgroundColors.add(new Color(0.149f, 0.055f, 0.125f, 1));
+        backgroundColors.add(new Color(0.157f, 0.055f, 0.094f, 1));
+
 //        bigDotTextures = new ArrayList<>();
 //        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot1.png", Texture.class)));
 //        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot12.png", Texture.class)));
 //        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot2.png", Texture.class)));
 //        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot3.png", Texture.class)));
 //        bigDotTextures.add(new TextureRegion(game.assetManager.get("images/background/BackgroundDot4.png", Texture.class)));
-        smallDotTextures = new ArrayList<>();
+        smallDotTextures = new Array<>(true, 3, TextureRegion.class);
         smallDotTextures.add(new TextureRegion(game.assetManager.get("images/background/SmallDot1.png", Texture.class)));
         smallDotTextures.add(new TextureRegion(game.assetManager.get("images/background/SmallDot2.png", Texture.class)));
         smallDotTextures.add(new TextureRegion(game.assetManager.get("images/background/SmallDot3.png", Texture.class)));
-        dotTextures = new ArrayList<>();
+        dotTextures = new Array<>(true, 3, TextureRegion.class);
         dotTextures.add(new TextureRegion(game.assetManager.get("images/background/Dot1.png", Texture.class)));
         dotTextures.add(new TextureRegion(game.assetManager.get("images/background/Dot2.png", Texture.class)));
         dotTextures.add(new TextureRegion(game.assetManager.get("images/background/Dot3.png", Texture.class)));
@@ -58,17 +69,14 @@ public class BackgroundFactory {
         return instance;
     }
 
-    public void generate() {
+    public void generate(int difficulty) {
+        Info.colorClear = backgroundColors.get(difficulty);
+
         for(int i = 0; i < 50; i++) {
-            int index = MathUtils.random(0, smallDotTextures.size() - 1);
+            int index = MathUtils.random(0, smallDotTextures.size - 1);
             float size = MathUtils.random(Info.blockSize / 10, Info.blockSize / 1.2f);
             createSmallDot(engine.createEntity(), index, size, size);
         }
-//        for(int i = 0; i < 10; i++) {
-//            int index = MathUtils.random(0, dotTextures.size() - 1);
-//            float size = MathUtils.random(Info.blockSize * 2, Info.blockSize * 20);
-//            createDot(engine.createEntity(), dotTextures.get(index), size, size);
-//        }
 
 //        createBigDot(engine.createEntity(), bigDotTextures.get(2));
     }

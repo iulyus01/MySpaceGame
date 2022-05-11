@@ -63,8 +63,9 @@ public class SystemManager {
         engine.addSystem(new DraggingSystem(worldFactory.getWorld()));
         engine.addSystem(new PlayerControlSystem(keyboardController, game, engine, camera));
         engine.addSystem(new BulletSystem(game, engine));
+        engine.addSystem(new RockSystem());
         engine.addSystem(new BackgroundSystem(camera));
-        engine.addSystem(new CollisionSystem(game, engine));
+        engine.addSystem(new CollisionSystem());
 
         engine.addSystem(new EnemyGenerationSystem(game, engine));
 

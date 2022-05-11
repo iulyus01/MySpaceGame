@@ -20,6 +20,7 @@ import com.myspacegame.MainClass;
 import com.myspacegame.ui.UIStyles;
 import com.myspacegame.utils.PieceConfig;
 import com.myspacegame.utils.PieceEdge;
+import com.myspacegame.utils.RockConfig;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -148,6 +149,11 @@ public class LoadingScreen implements Screen {
         game.assetManager.load("images/hover.png", Texture.class);
         game.assetManager.load("images/hover.png", Texture.class);
         game.assetManager.load("images/anchor.png", Texture.class);
+        game.assetManager.load("images/Rock0.png", Texture.class);
+        game.assetManager.load("images/Rock1.png", Texture.class);
+        game.assetManager.load("images/Rock2.png", Texture.class);
+        game.assetManager.load("images/Rock3.png", Texture.class);
+        game.assetManager.load("images/Rock4.png", Texture.class);
 
 //        game.assetManager.load("ui/GoUpButton.png", Texture.class);
 //        game.assetManager.load("ui/GoUpButtonOver.png", Texture.class);
@@ -190,15 +196,21 @@ public class LoadingScreen implements Screen {
         try {
             FileHandle piecesConfig = Gdx.files.local("configs/pieces.json");
             FileHandle shipsConfig = Gdx.files.local("configs/ships.json");
+            FileHandle rocksConfig = Gdx.files.local("configs/rocks.json");
+
             Object obj = jsonParser.parse(piecesConfig.readString());
             JSONArray jsonArray = (JSONArray) obj;
-
             Info.pieceConfigsMap = new HashMap<>();
             for(Object o : jsonArray) parsePieceConfigsObject((JSONObject) o);
 
             obj = jsonParser.parse(shipsConfig.readString());
             jsonArray = (JSONArray) obj;
             loadShips(jsonArray);
+
+            obj = jsonParser.parse(rocksConfig.readString());
+            jsonArray = (JSONArray) obj;
+            Info.rockShapesMap = new HashMap<>();
+            for(Object o : jsonArray) parseRocksConfigs((JSONObject) o);
         } catch(ParseException e) {
             e.printStackTrace();
         }
@@ -252,5 +264,30 @@ public class LoadingScreen implements Screen {
             }
             Info.ships.add(ship);
         }
+    }
+
+    private void parseRocksConfigs(JSONObject rock) {
+        int id = (int) (long) rock.get("id");
+        String name = (String) rock.get("name");
+        String textureName = (String) rock.get("texture");
+
+        JSONArray edgesJSONArray = (JSONArray) rock.get("shape");
+        Array<Array<Float>> edges = new Array<>(true, edgesJSONArray.size(), Array.class);
+        for(Object sectionObj : edgesJSONArray) {
+            JSONArray sectionArray = (JSONArray) sectionObj;
+            Array<Float> sectionEdges = new Array<>(true, sectionArray.size(), Float.class);
+            for(Object vertex : sectionArray) {
+                sectionEdges.add((float) (double) vertex);
+            }
+            edges.add(sectionEdges);
+        }
+
+        RockConfig pieceConfig = new RockConfig();
+        pieceConfig.id = id;
+        pieceConfig.name = name;
+        pieceConfig.textureName = textureName;
+        pieceConfig.shape = edges;
+
+        Info.rockShapesMap.put(id, pieceConfig);
     }
 }

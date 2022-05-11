@@ -3,9 +3,7 @@ package com.myspacegame.factories;
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.physics.box2d.*;
-import com.myspacegame.components.BulletComponent;
-import com.myspacegame.components.CollisionComponent;
-import com.myspacegame.components.DraggingComponent;
+import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.PieceComponent;
 
 public class B2dContactFilter implements ContactFilter {
@@ -25,7 +23,6 @@ public class B2dContactFilter implements ContactFilter {
         if(!(fixtureA.getUserData() instanceof Entity) || !(fixtureB.getUserData() instanceof Entity)) return true;
         Entity entityA = (Entity) fixtureA.getUserData();
         Entity entityB = (Entity) fixtureB.getUserData();
-
         if(draggingMapper.has(entityA) || draggingMapper.has(entityB)) return false;
 
         if(bulletMapper.has(entityA)) return handleBulletContact(bulletMapper.get(entityA), entityB);
@@ -37,6 +34,8 @@ public class B2dContactFilter implements ContactFilter {
         if(pieceMapper.has(entity)) {
             // if bullet is created by same actor as piece, it won't collide
             return bulletComponent.createdByActorId != pieceMapper.get(entity).piece.actorId;
+        } else if(bulletMapper.has(entity)) {
+            return false;
         }
 
         return true;

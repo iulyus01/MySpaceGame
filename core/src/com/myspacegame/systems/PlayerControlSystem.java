@@ -21,7 +21,6 @@ import com.myspacegame.entities.ThrusterPiece;
 import com.myspacegame.entities.TractorBeamPiece;
 import com.myspacegame.entities.WeaponPiece;
 import com.myspacegame.factories.EntitiesFactory;
-import com.myspacegame.factories.ShapeRenderingDebug;
 import com.myspacegame.factories.SystemManager;
 import com.myspacegame.factories.WorldFactory;
 import com.myspacegame.utils.Functions;
@@ -173,6 +172,7 @@ public class PlayerControlSystem extends IteratingSystem {
                     activated = true;
                 }
             }
+            if(piece.rotation % 2 == 0) computedLinearImpulse /= 2;
         }
 
 
@@ -218,7 +218,7 @@ public class PlayerControlSystem extends IteratingSystem {
             if(!piece.isReloading) {
                 Vector2 pos = pieceComponent.fixtureCenter;
 
-                Entity bulletEntity = entitiesFactory.createBullet(piece.actorId, pos.x, pos.y, piece.angleRad);
+                Entity bulletEntity = entitiesFactory.createBulletEntity(piece.actorId, pos.x, pos.y, piece.angleRad);
                 engine.addEntity(bulletEntity);
                 piece.isReloading = true;
 

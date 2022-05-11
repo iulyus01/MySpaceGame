@@ -84,12 +84,11 @@ public class BackgroundSystem extends IteratingSystem {
         textureComponent.textureRegion.setRegion((int) srcX, (int) srcY, (int) srcWidth, (int) srcHeight);
 //        textureComponent.textureRegion.setRegion(500, 500, 500, 500);
         System.out.println("crop: " + srcX + " " + srcY + " " + srcWidth + " " + srcHeight);
-//        System.out.println("camera pos: " + Info.cameraWorldX + " " + Info.cameraWorldY);
     }
 
     private void processSmallDot(TransformComponent transform) {
-        boolean xInside = Math.abs(Info.cameraWorldX - transform.position.x) < camera.viewportWidth;
-        boolean yInside = Math.abs(Info.cameraWorldY - transform.position.y) < camera.viewportHeight;
+        boolean xInside = Math.abs(Info.cameraWorldX - transform.position.x) < camera.viewportWidth * camera.zoom;
+        boolean yInside = Math.abs(Info.cameraWorldY - transform.position.y) < camera.viewportHeight * camera.zoom;
         transform.isHidden = !(xInside && yInside);
     }
 }

@@ -73,11 +73,12 @@ public class EntitiesFactory {
         entity.add(textureComponent);
         entity.add(transformComponent);
         entity.add(collisionComponent);
+        entity.add(engine.createComponent(WallComponent.class));
 
         return entity;
     }
 
-    public Entity createPiece(Class<? extends Component> componentType, boolean random, float bodyX, float bodyY) {
+    public Entity createPieceEntity(Class<? extends Component> componentType, boolean random, float bodyX, float bodyY) {
         if(random) {
             bodyX = (float) Math.random() * 60 - 30;
             bodyY = (float) Math.random() * 60 - 30;
@@ -153,7 +154,7 @@ public class EntitiesFactory {
         return entity;
     }
 
-    public Entity createBullet(int actorId, float x, float y, float angleRad) {
+    public Entity createBulletEntity(int actorId, float x, float y, float angleRad) {
         float sizeWidth = Info.blockSize * 5f / 2;
         float sizeHeight = sizeWidth * .65f;
 
@@ -216,6 +217,44 @@ public class EntitiesFactory {
 
         entity.add(textureComponent);
         entity.add(transformComponent);
+
+        return entity;
+    }
+
+    public Entity createRockEntity(int index, float x, float y, boolean random) {
+        if(random) {
+            index = MathUtils.random(0, Info.rockShapesMap.size() - 1);
+        }
+        float sizeRatio = MathUtils.random(MathUtils.random() < 0.7 ? Info.blockSize * 4 : Info.blockSize * 6, Info.blockSize * 2);
+        float angleRad = MathUtils.random(0, Info.rad360Deg);
+
+        Entity entity = engine.createEntity();
+        TextureComponent textureComponent = createTextureComponent("images/Rock" + index + ".png");
+
+        float width;
+        float height;
+        if(textureComponent.textureRegion.getRegionWidth() > textureComponent.textureRegion.getRegionHeight()) {
+            width = sizeRatio;
+            height = textureComponent.textureRegion.getRegionHeight() / (float) textureComponent.textureRegion.getRegionWidth() * sizeRatio;
+        } else {
+            width = textureComponent.textureRegion.getRegionWidth() / (float) textureComponent.textureRegion.getRegionHeight() * sizeRatio;
+            height = sizeRatio;
+        }
+        width *= 2;
+        height *= 2;
+        TransformComponent transformComponent = createTransformComponent(width, height, angleRad, 0, textureComponent, Info.ZOrder.ROCKS);
+        RockComponent rockComponent = createRockComponent();
+
+        Body body = bodyFactory.createRockBody(index, x, y, angleRad, sizeRatio, 0, 0, entity);
+        BodyComponent bodyComponent = createBodyComponent(body);
+
+        CollisionComponent collisionComponent = createCollisionComponent();
+
+        entity.add(rockComponent);
+        entity.add(textureComponent);
+        entity.add(transformComponent);
+        entity.add(bodyComponent);
+        entity.add(collisionComponent);
 
         return entity;
     }
@@ -448,8 +487,14 @@ public class EntitiesFactory {
         return bulletComponent;
     }
 
+    private RockComponent createRockComponent() {
+        return engine.createComponent(RockComponent.class);
+    }
+
     private CollisionComponent createCollisionComponent() {
-        return engine.createComponent(CollisionComponent.class);
+        CollisionComponent collisionComponent = engine.createComponent(CollisionComponent.class);
+        collisionComponent.collisionEntities = new Array<>(false, 8, Entity.class);
+        return collisionComponent;
     }
 
 }

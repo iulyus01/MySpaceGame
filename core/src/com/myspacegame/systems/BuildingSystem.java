@@ -119,7 +119,6 @@ public class BuildingSystem extends IteratingSystem {
             if(pieceComponent.fixture.testPoint(Info.mouseWorldX, Info.mouseWorldY)) {
                 updatePieceHoverTransform(transformMapper.get(hoverEntity), textureMapper.get(hoverEntity), transformMapper.get(entity));
                 hoverIsActive = true;
-//                textureComponent.overlayTexture = hoverTexture;
                 if(controller.isDragged) {
                     isDraggingPieceBegin = true;
                     draggingEntity = entity;
@@ -228,7 +227,7 @@ public class BuildingSystem extends IteratingSystem {
 
             float[] pieceVertices = pieceComponent.piece.shape.getVertices();
             Polygon piecePolygon = new Polygon(pieceVertices);
-            piecePolygon.setRotation(pieceComponent.piece.shape.getRotation());
+            piecePolygon.setRotation(pieceComponent.piece.rotation * 90);
             piecePolygon.setPosition(pieceComponent.fixtureCenter.x + offsetX, pieceComponent.fixtureCenter.y + offsetY);
             piecePolygon.setScale(.9f, .9f);
             ShapeRenderingDebug.addToDrawWithId(() -> ShapeRenderingDebug.drawDebugPolygon(piecePolygon.getTransformedVertices()), 2, 2000);
@@ -236,13 +235,13 @@ public class BuildingSystem extends IteratingSystem {
             for(Piece shipPiece : playerShip.piecesArray) {
                 if(shipPiece.pieceComponent.fixtureCenter.dst2(pieceComponent.fixtureCenter) > maxDistanceCheck2) continue;
                 float[] vertices = shipPiece.shape.getVertices();
-                Polygon polygon = new Polygon(vertices);
-                polygon.setPosition(shipPiece.pieceComponent.fixtureCenter.x, shipPiece.pieceComponent.fixtureCenter.y);
-                polygon.setRotation(piecePolygon.getRotation());
+                Polygon shipPiecePolygon = new Polygon(vertices);
+                shipPiecePolygon.setPosition(shipPiece.pieceComponent.fixtureCenter.x, shipPiece.pieceComponent.fixtureCenter.y);
+                shipPiecePolygon.setRotation(shipPiece.rotation * 90);
 
-                overlaps = Intersector.overlapConvexPolygons(piecePolygon.getTransformedVertices(), polygon.getTransformedVertices(), null);
+                overlaps = Intersector.overlapConvexPolygons(piecePolygon.getTransformedVertices(), shipPiecePolygon.getTransformedVertices(), null);
                 if(overlaps) {
-                    ShapeRenderingDebug.addToDrawWithId(() -> ShapeRenderingDebug.drawDebugPolygon(polygon.getTransformedVertices()), 3, 2000);
+                    ShapeRenderingDebug.addToDrawWithId(() -> ShapeRenderingDebug.drawDebugPolygon(shipPiecePolygon.getTransformedVertices()), 3, 2000);
                     toAttachAnchors.removeIndex(i);
                     i--;
                     break;
@@ -268,11 +267,6 @@ public class BuildingSystem extends IteratingSystem {
         piece.pos.y = Math.round(((pieceComponent.fixtureCenter.y + offsetY - shipComponent.core.pieceComponent.fixtureCenter.y) / Info.blockSize) * 2) / 2f;
 
         for(var pair : attachAnchors) {
-
-//            pair.first.anchorComponent.toRemove = true;
-//            pair.second.anchorComponent.toRemove = true;
-//            entitiesFactory.removeAnchorEntity(pair.first);
-//            entitiesFactory.removeAnchorEntity(pair.second);
             pair.first.piece = piece;
             pair.second.piece = pair.first.srcPiece;
         }

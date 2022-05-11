@@ -40,13 +40,24 @@ public class BulletSystem extends IteratingSystem {
         transformComponent.position.y = body.getWorldCenter().y;
 
         // bullet life
-        if(bulletComponent.lifeDelta >= bulletComponent.maxLifeDelta) {
-            bulletComponent.isDead = true;
+        if(bulletComponent.lifeDelta >= bulletComponent.lifeDeltaMax) {
+            bulletComponent.isReadyToDie = true;
+            if(bulletComponent.lifeDelta >= bulletComponent.lifeDeadDeltaMax) {
+                bulletComponent.isDead = true;
+            }
         }
-
+        if(bulletComponent.isReadyToDie) {
+//            System.out.println("destroying body");
+            destroyBody(body);
+        }
         if(bulletComponent.isDead) {
+//            System.out.println("destroying bullet");
             destroyBullet(entity, body);
         }
+    }
+
+    private void destroyBody(Body body) {
+        body.setActive(false);
     }
 
     private void destroyBullet(Entity entity, Body body) {

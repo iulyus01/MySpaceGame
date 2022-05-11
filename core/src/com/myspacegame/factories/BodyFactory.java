@@ -3,6 +3,7 @@ package com.myspacegame.factories;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 import com.myspacegame.Info;
 import com.myspacegame.components.ShipComponent;
 import com.myspacegame.entities.Piece;
@@ -43,6 +44,11 @@ public class BodyFactory {
                 fixtureDef.friction = .4f;
                 fixtureDef.restitution = .01f;
                 break;
+            case ROCK:
+                fixtureDef.density = 8;
+                fixtureDef.friction = .1f;
+                fixtureDef.restitution = .2f;
+                break;
         }
         return fixtureDef;
     }
@@ -64,6 +70,12 @@ public class BodyFactory {
                 break;
             case WALL:
                 bodyDef.type = BodyDef.BodyType.StaticBody;
+                break;
+            case ROCK:
+                bodyDef.type = BodyDef.BodyType.DynamicBody;
+                bodyDef.fixedRotation = false;
+                bodyDef.linearDamping = Info.defaultRockLinearDamping;
+                bodyDef.angularDamping = Info.defaultRockAngularDamping;
                 break;
         }
         return bodyDef;
@@ -105,6 +117,42 @@ public class BodyFactory {
         return body;
     }
 
+    public Body createRockBody(int index, float x, float y, float angleRad, float sizeRatio, float impulseX, float impulseY, Entity entity) {
+        BodyDef bodyDef = initBodyDef(Info.EntityType.ROCK, false);
+        bodyDef.position.x = x;
+        bodyDef.position.y = y;
+        bodyDef.angle = angleRad;
+
+        Body body = world.createBody(bodyDef);
+
+        Array<Array<Float>> arrayOfDots = Info.rockShapesMap.get(index).shape;
+
+        for(int i = 0; i < arrayOfDots.size; i++) {
+            float[] dots = new float[arrayOfDots.get(i).size];
+            for(int j = 0; j < dots.length; j++) {
+                dots[j] = arrayOfDots.get(i).get(j) * sizeRatio;
+            }
+
+            PolygonShape shape = new PolygonShape();
+            shape.set(dots);
+
+            FixtureDef fixtureDef = initFixtureDef(Info.EntityType.ROCK);
+            fixtureDef.shape = shape;
+            Fixture fixture = body.createFixture(fixtureDef);
+            fixture.setUserData(entity);
+            shape.dispose();
+        }
+
+
+        body.applyLinearImpulse(
+                impulseX, impulseY,
+                body.getWorldCenter().x, body.getWorldCenter().y,
+                true
+        );
+
+        return body;
+    }
+
     public Body createWallBody(float x, float y, float width, float height, Entity entity) {
         BodyDef bodyDef = initBodyDef(Info.EntityType.WALL, false);
         bodyDef.position.x = x;
@@ -112,6 +160,7 @@ public class BodyFactory {
         bodyDef.angle = 0;
 
         Body body = world.createBody(bodyDef);
+        body.setUserData("body");
 
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(width / 2, height / 2);

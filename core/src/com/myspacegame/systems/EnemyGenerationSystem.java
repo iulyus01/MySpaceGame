@@ -32,7 +32,6 @@ public class EnemyGenerationSystem extends com.badlogic.ashley.systems.IntervalS
         this.entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
 
         enemies = new ArrayList<>();
-        enemies.add(worldFactory.createEnemyRandomShip(enemyActorIdCounter++, 20, 10));
     }
 
     @Override

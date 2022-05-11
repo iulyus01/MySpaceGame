@@ -13,6 +13,7 @@ import com.myspacegame.components.pieces.PieceComponent;
 import com.myspacegame.entities.Piece;
 import com.myspacegame.utils.PieceConfig;
 import com.myspacegame.utils.PieceEdge;
+import com.myspacegame.utils.RockConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,8 @@ public class Info {
     public static final float defaultSinglePieceLinearDamping = 0.2f;
     public static final float defaultSinglePieceAngularDamping = 0.2f;
     public static final float defaultTractorBeamRadius = 40 * blockSize;
+    public static final float defaultRockLinearDamping = .1f;
+    public static final float defaultRockAngularDamping = .1f;
     public static final float maxHorVerVelocity = 14f; // maximum horizontal vertical speed
 
     public static final short CATEGORY_PLAYER = 0x0001;  // 0000000000000001 in binary
@@ -98,6 +101,7 @@ public class Info {
     public static PlayerMode activeMode;
 
     public static Map<Integer, PieceConfig> pieceConfigsMap;
+    public static Map<Integer, RockConfig> rockShapesMap;
 
     // pieceId  pieceTypeId  shapeId  rotation  x  y
     // pieceId # edgeId edgeAnchorId id edgeAnchorId id # edgeId edgeAnchorId id
@@ -108,13 +112,13 @@ public class Info {
         MOVING, BUILDING
     }
     public enum EntityType {
-        PIECE, BULLET, WALL
+        PIECE, BULLET, WALL, ROCK
     }
     public enum NPCType {
         ALLY, NEUTRAL, ENEMY
     }
     public enum ZOrder {
-        OTHERS(0), PIECE(3), WEAPONS(5), BULLETS(8), PIECE_DRAG(10), ANCHOR(15), HOVER_OVERLAY(20), WALL(30);
+        OTHERS(0), PIECE(3), WEAPONS(5), BULLETS(8), ROCKS(9), PIECE_DRAG(10), ANCHOR(15), HOVER_OVERLAY(20), WALL(30);
 
         private final int value;
         ZOrder(int value) {
@@ -303,6 +307,7 @@ public class Info {
 /*
 
     TODO make thruster image a full piece.. to be able to attach more one to other
+    TODO change thruster fixture shape
 
 
     TODO add tractor beam for pieces

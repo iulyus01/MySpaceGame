@@ -17,7 +17,7 @@ public class WorldFactory {
     private final World world;
     private final EntitiesFactory entitiesFactory;
 
-
+    private final List<Point> mapList;
     private Point startPoint;
     private Point endPoint;
     private Point current;
@@ -32,7 +32,7 @@ public class WorldFactory {
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
         LevelFactory levelFactory = LevelFactory.getInstance(game, engine, world);
 
-        generateMap();
+        mapList = generateMap();
 
         levelFactory.createLevel(current);
 
@@ -43,7 +43,7 @@ public class WorldFactory {
         return instance;
     }
 
-    private void generateMap() {
+    private List<Point> generateMap() {
         List<Point> list = new ArrayList<>(18);
         list.add(new Point(0, 0, new Vector2(10, 160)));
         list.add(new Point(1, 1, new Vector2(30, 152)));
@@ -55,14 +55,14 @@ public class WorldFactory {
         list.add(new Point(7, 3, new Vector2(132, 72)));
         list.add(new Point(8, 1, new Vector2(118, 82)));
         list.add(new Point(9, 1, new Vector2(86, 73)));
-        list.add(new Point(10, 5, new Vector2(65, 60)));
+        list.add(new Point(10, 4, new Vector2(65, 60)));
         list.add(new Point(11, 0, new Vector2(40, 60)));
         list.add(new Point(12, 1, new Vector2(100, 60)));
         list.add(new Point(13, 1, new Vector2(115, 40)));
         list.add(new Point(14, 3, new Vector2(78, 33)));
         list.add(new Point(15, 2, new Vector2(55, 33)));
-        list.add(new Point(16, 7, new Vector2(33, 16)));
-        list.add(new Point(17, 7, new Vector2(82, 6)));
+        list.add(new Point(16, 5, new Vector2(33, 16)));
+        list.add(new Point(17, 5, new Vector2(82, 6)));
 
         list.get(0).to = List.of(list.get(1));
         list.get(1).to = List.of(list.get(0), list.get(2));
@@ -86,6 +86,8 @@ public class WorldFactory {
         startPoint = list.get(0);
         endPoint = list.get(11);
         current = startPoint;
+
+        return list;
     }
 
     public Entity createEnemyRandomShip(int actorId, float x, float y) {

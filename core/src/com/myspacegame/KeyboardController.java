@@ -122,7 +122,7 @@ public class KeyboardController implements InputProcessor {
         if(camera.zoom < .1f) camera.zoom = .1f;
 
         camera.update();
-        System.out.println(camera.zoom);
+        System.out.println(camera.zoom + " " + camera.viewportWidth + " " + camera.viewportHeight);
         return false;
     }
 }

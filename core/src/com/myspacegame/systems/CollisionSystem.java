@@ -5,6 +5,8 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.utils.Array;
 import com.myspacegame.MainClass;
 import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.PieceComponent;
@@ -12,37 +14,44 @@ import com.myspacegame.components.pieces.PieceComponent;
 public class CollisionSystem extends IteratingSystem {
 
     private final ComponentMapper<CollisionComponent> collisionMapper;
+    private final ComponentMapper<TextureComponent> textureMapper;
+    private final ComponentMapper<BodyComponent> bodyMapper;
     private final ComponentMapper<PieceComponent> pieceMapper;
     private final ComponentMapper<BulletComponent> bulletMapper;
-    private final ComponentMapper<TextureComponent> textureMapper;
+    private final ComponentMapper<RockComponent> rockMapper;
 
-    public CollisionSystem(MainClass game, PooledEngine engine) {
-        super(Family.all(CollisionComponent.class).one(PieceComponent.class, BulletComponent.class).get());
+    public CollisionSystem() {
+        super(Family.all(CollisionComponent.class).one(PieceComponent.class, BulletComponent.class, RockComponent.class, WallComponent.class).get());
 
         collisionMapper = ComponentMapper.getFor(CollisionComponent.class);
+        textureMapper = ComponentMapper.getFor(TextureComponent.class);
+        bodyMapper = ComponentMapper.getFor(BodyComponent.class);
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
         bulletMapper = ComponentMapper.getFor(BulletComponent.class);
-        textureMapper = ComponentMapper.getFor(TextureComponent.class);
+        rockMapper = ComponentMapper.getFor(RockComponent.class);
 
-        // TODO change thruster fixture shape
     }
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         CollisionComponent collisionComponent = collisionMapper.get(entity);
-        Entity collidedEntity = collisionComponent.collisionEntity;
-        if(collidedEntity == null) return;
+        Array<Entity> collidedEntities = collisionComponent.collisionEntities;
+        if(collidedEntities.size == 0) return;
 
-        if(bulletMapper.has(entity)) {
-            handleBulletCollision(entity, bulletMapper.get(entity), collidedEntity);
-        } else if(bulletMapper.has(collidedEntity)) {
-            handleBulletCollision(collidedEntity, bulletMapper.get(collidedEntity), entity);
+        for(int i = 0; i < collidedEntities.size; i++) {
+            Entity collidedEntity = collidedEntities.get(i);
+            if(bulletMapper.has(entity)) {
+                handleBulletCollision(entity, bulletMapper.get(entity), collidedEntity);
+            } else if(bulletMapper.has(collidedEntity)) {
+                handleBulletCollision(collidedEntity, bulletMapper.get(collidedEntity), entity);
+            }
+            collisionComponent.collisionEntities.removeIndex(i);
+            i--;
         }
 
-        collisionComponent.collisionEntity = null;
 
-//		if(collidedEntity != null){
-//			TypeComponent type = collidedEntity.getComponent(TypeComponent.class);
+//		if(collidedEntities != null){
+//			TypeComponent type = collidedEntities.getComponent(TypeComponent.class);
 //			if(type != null){
 //				switch(type.type){
 //				case TypeComponent.ENEMY:
@@ -65,6 +74,8 @@ public class CollisionSystem extends IteratingSystem {
     }
 
     private void handleBulletCollision(Entity bulletEntity, BulletComponent bulletComponent, Entity collidedEntity) {
+        Body bulletBody = bodyMapper.get(bulletEntity).body;
+
         if(pieceMapper.has(collidedEntity)) {
             // bullet - piece
 			PieceComponent pieceComponent = pieceMapper.get(collidedEntity);
@@ -73,9 +84,14 @@ public class CollisionSystem extends IteratingSystem {
                 pieceComponent.isDead = true;
             }
 
-            bulletComponent.isDead = true;
+            bulletBody.setLinearVelocity(0, 0);
+            bulletComponent.isReadyToDie = true;
             textureMapper.get(bulletEntity).textureRegion = null;
-
+        } else if(rockMapper.has(collidedEntity)) {
+            // bullet - rock
+            bulletBody.setLinearVelocity(0, 0);
+            bulletComponent.isReadyToDie = true;
+            textureMapper.get(bulletEntity).textureRegion = null;
         }
     }
 

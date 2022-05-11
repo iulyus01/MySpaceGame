@@ -48,9 +48,9 @@ public class B2dContactListener implements ContactListener {
             CollisionComponent collisionB = entityB.getComponent(CollisionComponent.class);
 
             if(collisionA != null) {
-                collisionA.collisionEntity = entityB;
+                collisionA.collisionEntities.add(entityB);
             } else if(collisionB != null) {
-                collisionB.collisionEntity = entityA;
+                collisionB.collisionEntities.add(entityA);
             }
         }
     }

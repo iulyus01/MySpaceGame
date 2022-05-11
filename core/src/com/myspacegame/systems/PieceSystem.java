@@ -209,14 +209,18 @@ public class PieceSystem extends IteratingSystem {
                 destPiece = piece;
             }
         }
-        if(destPiece == null) {
-            return;
-        }
+        if(destPiece == null) return;
+
         ShapeRenderingDebug.drawDebugLine(pieceComponent.fixtureCenter.x, pieceComponent.fixtureCenter.y, destPiece.pieceComponent.fixtureCenter.x, destPiece.pieceComponent.fixtureCenter.y);
         float angle = MathUtils.atan2( destPiece.pieceComponent.fixtureCenter.y - pieceComponent.fixtureCenter.y, destPiece.pieceComponent.fixtureCenter.x - pieceComponent.fixtureCenter.x);
-        if(distMin < 30 * Info.blockSize) {
-            angle += Info.rad90Deg * 2;
+
+        Info.tempVector2 = pieceComponent.fixture.getBody().getLinearVelocity();
+        System.out.println("velocity: " + Info.tempVector2.x + " " + Info.tempVector2.y);
+        if(Math.abs(Info.tempVector2.x) + Math.abs(Info.tempVector2.y) < 1) {
+//            pieceComponent.fixture.getBody().setLinearVelocity(0, 0);
+            pieceComponent.fixture.getBody().applyForceToCenter(MathUtils.cos(angle) * 1, MathUtils.sin(angle) * 1, true);
+        } else {
+            pieceComponent.fixture.getBody().setLinearVelocity(Info.tempVector2.x * .95f, Info.tempVector2.y * .95f);
         }
-        pieceComponent.fixture.getBody().applyForceToCenter(MathUtils.cos(angle) * destPiece.force, MathUtils.sin(angle) * destPiece.force, true);
     }
 }

@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.myspacegame.Info;
 import com.myspacegame.MainClass;
@@ -38,9 +37,17 @@ public class LevelFactory {
     }
 
     public void createLevel(WorldFactory.Point currentPoint) {
-        generateBackground();
+        generateBackground(currentPoint.difficulty);
+
         addPlayer();
+
         createWalls();
+
+//        addRocks();
+
+        for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPieceEntity(HullPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPieceEntity(WeaponPieceComponent.class, true, 0, 0));
+        for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPieceEntity(ThrusterPieceComponent.class, true, 0, 0));
     }
 
     public static LevelFactory getInstance(MainClass game, PooledEngine engine, World world) {
@@ -54,28 +61,50 @@ public class LevelFactory {
         return enemyEntities.get(0);
     }
 
-    private void generateBackground() {
-        backgroundFactory.generate();
+    private void generateBackground(int difficulty) {
+        backgroundFactory.generate(difficulty);
     }
 
     private void addPlayer() {
         List<Entity> playerEntities = entitiesFactory.createShip(Info.ships.get(3), 10, 10, Info.StaticActorIds.PLAYER.getValue(), true);
         for(Entity entity : playerEntities) engine.addEntity(entity);
 
-        for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPiece(HullPieceComponent.class, true, 0, 0));
-        for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPiece(WeaponPieceComponent.class, true, 0, 0));
-        for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPiece(ThrusterPieceComponent.class, true, 0, 0));
     }
 
     private void createWalls() {
-        Entity wallEntity = entitiesFactory.createWall(Info.worldWidthLimit, 0, 1, Info.worldHeightLimit * 2);
-        engine.addEntity(wallEntity);
-        wallEntity = entitiesFactory.createWall(0, Info.worldHeightLimit, Info.worldWidthLimit * 2, 1);
-        engine.addEntity(wallEntity);
-        wallEntity = entitiesFactory.createWall(-Info.worldWidthLimit, 0, 1, Info.worldHeightLimit * 2);
-        engine.addEntity(wallEntity);
-        wallEntity = entitiesFactory.createWall(0, -Info.worldHeightLimit, Info.worldWidthLimit * 2, 1);
-        engine.addEntity(wallEntity);
+        Entity entity;
+        int nr = 80;
+        float posX;
+        float posY;
+        for(int i = 0; i < nr; i++) {
+            // right
+            posX = MathUtils.random(Info.worldWidthLimit, Info.worldWidthLimit + 20);
+            posY = MathUtils.random(-Info.worldHeightLimit, Info.worldHeightLimit);
+            entity = entitiesFactory.createRockEntity(0, posX, posY, true);
+            engine.addEntity(entity);
+        }
+        for(int i = 0; i < nr + 8; i++) {
+            // top
+            posX = MathUtils.random(-Info.worldWidthLimit - 20, Info.worldWidthLimit + 20);
+            posY = MathUtils.random(Info.worldHeightLimit, Info.worldHeightLimit + 20);
+            entity = entitiesFactory.createRockEntity(0, posX, posY, true);
+            engine.addEntity(entity);
+        }
+        for(int i = 0; i < nr; i++) {
+            // left
+            posX = MathUtils.random(-Info.worldWidthLimit - 20, -Info.worldWidthLimit);
+            posY = MathUtils.random(-Info.worldHeightLimit, Info.worldHeightLimit);
+            entity = entitiesFactory.createRockEntity(0, posX, posY, true);
+            engine.addEntity(entity);
+        }
+        for(int i = 0; i < nr + 8; i++) {
+            // bottom
+            posX = MathUtils.random(-Info.worldWidthLimit - 20, Info.worldWidthLimit + 20);
+            posY = MathUtils.random(-Info.worldHeightLimit - 20, -Info.worldHeightLimit);
+            entity = entitiesFactory.createRockEntity(0, posX, posY, true);
+            engine.addEntity(entity);
+        }
+
     }
 
     public World getWorld() {

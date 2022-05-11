@@ -13,7 +13,7 @@ public class TractorBeamPiece extends Piece {
     public TractorBeamPiece(float radius) {
         super();
         this.radius2 = radius * radius;
-        this.force = Info.defaultThrusterForce / 8;
+        this.force = Info.defaultThrusterForce / 40;
         this.activateKey = Input.Keys.T;
     }
 
