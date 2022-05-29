@@ -72,8 +72,10 @@ public class Info {
 //    public static final float blockSize = .24f;
     public static final float blockSize = .5f;
     public static final float maxPieceSize = 5 * blockSize;
+    public static final float baseTeleporterRadius = 8 * blockSize;
     public static final float defaultPieceDensity = 4f;
-    public static final float defaultThrusterForce = 400f;
+//    public static final float defaultThrusterForce = 400f;
+    public static final float defaultThrusterForce = 240f;
     public static final float defaultThrusterImpulse = 7f;
     public static final float defaultBulletImpulse = 10f;
     public static final float defaultBulletDensity = 1.8f;
@@ -84,7 +86,7 @@ public class Info {
     public static final float defaultTractorBeamRadius = 40 * blockSize;
     public static final float defaultRockLinearDamping = .1f;
     public static final float defaultRockAngularDamping = .1f;
-    public static final float maxHorVerVelocity = 14f; // maximum horizontal vertical speed
+    public static final float maxHorVerVelocity = 16f; // maximum horizontal vertical speed
 
     public static final short CATEGORY_PLAYER = 0x0001;  // 0000000000000001 in binary
     public static final short CATEGORY_BULLET = 0x0002; // 0000000000000010 in binary
@@ -99,6 +101,7 @@ public class Info {
 
 
     public static PlayerMode activeMode;
+    public static boolean playerIsDead;
 
     public static Map<Integer, PieceConfig> pieceConfigsMap;
     public static Map<Integer, RockConfig> rockShapesMap;
@@ -112,13 +115,13 @@ public class Info {
         MOVING, BUILDING
     }
     public enum EntityType {
-        PIECE, BULLET, WALL, ROCK
+        PIECE, BULLET, WALL, ROCK, TELEPORTER
     }
     public enum NPCType {
         ALLY, NEUTRAL, ENEMY
     }
     public enum ZOrder {
-        OTHERS(0), PIECE(3), WEAPONS(5), BULLETS(8), ROCKS(9), PIECE_DRAG(10), ANCHOR(15), HOVER_OVERLAY(20), WALL(30);
+        BACKGROUND(-2), OTHERS(0), TELEPORTER(1), PIECE(3), WEAPONS(5), BULLET(8), ROCK(9), PIECE_DRAG(10), ANCHOR(15), HOVER_OVERLAY(20), WALL(30);
 
         private final int value;
         ZOrder(int value) {
@@ -199,11 +202,9 @@ public class Info {
     public static Color colorBlue;
     public static Color colorBlueDarken4;
     public static Color colorRed;
+    public static Color colorPurple;
 
     public static void init() {
-//        colorClear = new Color(.184f, .215f, .258f, .4f);
-//        colorClear = new Color(0.06f, 0, 0.07f, 1);
-//        colorClear = new Color(0.023f, 0.207f, 0.239f, 1);
         colorClear = new Color(0.137f, 0.121f, 0.125f, 1);
 
         colorCyan = new Color(.160f, .713f, .964f, 1);
@@ -211,6 +212,7 @@ public class Info {
         colorBlueLighten5 = new Color(.89f, .949f, .992f, 1);
         colorBlueDarken4 = new Color(.05f, .278f, .631f, 1);
         colorRed = new Color(.937f, .325f, .313f, 1);
+        colorPurple = new Color(1, .3f, .95f, 1);
 
 
 
@@ -294,6 +296,17 @@ public class Info {
 
     public static float dist(float x1, float y1, float x2, float y2) {
         return (float) Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+    }
+
+    public static void rotatePointBy(Vector2 point, float angleRad) {
+        float sin = MathUtils.sin(angleRad);
+        float cos = MathUtils.cos(angleRad);
+
+        float newX = point.x * cos - point.y * sin;
+        float newY = point.x * sin + point.y * cos;
+
+        point.x = newX;
+        point.y = newY;
     }
 
     public static int parseFirstInteger(String nrS) {

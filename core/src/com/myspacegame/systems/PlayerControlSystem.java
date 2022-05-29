@@ -29,7 +29,6 @@ public class PlayerControlSystem extends IteratingSystem {
 
     private final ComponentMapper<PieceComponent> pieceMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
-    private final ComponentMapper<DraggingComponent> draggingMapper;
     private final ComponentMapper<ThrusterPieceComponent> thrusterPieceMapper;
     private final ComponentMapper<WeaponPieceComponent> weaponPieceMapper;
     private final ComponentMapper<TractorBeamPieceComponent> tractorBeamPieceMapper;
@@ -49,7 +48,6 @@ public class PlayerControlSystem extends IteratingSystem {
         this.camera = camera;
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
-        draggingMapper = ComponentMapper.getFor(DraggingComponent.class);
         thrusterPieceMapper = ComponentMapper.getFor(ThrusterPieceComponent.class);
         weaponPieceMapper = ComponentMapper.getFor(WeaponPieceComponent.class);
         tractorBeamPieceMapper = ComponentMapper.getFor(TractorBeamPieceComponent.class);
@@ -57,7 +55,7 @@ public class PlayerControlSystem extends IteratingSystem {
 
         World world = WorldFactory.getInstance(game, engine).getWorld();
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
-        Entity entity = engine.getEntitiesFor(Family.all(PlayerComponent.class, PieceComponent.class).get()).first();
+        Entity entity = engine.getEntitiesFor(Family.all(ShipCoreComponent.class, PlayerComponent.class, PieceComponent.class).get()).first();
         playerBody = pieceMapper.get(entity).fixture.getBody();
 
         thrusterForces = new Array<>(true, 4, Info.Quintuple.class);
@@ -109,11 +107,11 @@ public class PlayerControlSystem extends IteratingSystem {
         TransformComponent transformComponent = transformMapper.get(entity);
 
         if(thrusterPieceMapper.has(entity)) {
-            handleThruster(entity, transformComponent, pieceComponent);
+            handleThruster(transformComponent, pieceComponent);
         } else if(weaponPieceMapper.has(entity)) {
-            handleWeapon(entity, pieceComponent, deltaTime);
+            handleWeapon(pieceComponent, deltaTime);
         } else if(tractorBeamPieceMapper.has(entity)) {
-            handleTractorBeam(pieceComponent);
+            handleTractorBeam(tractorBeamPieceMapper.get(entity));
         }
     }
 
@@ -133,9 +131,8 @@ public class PlayerControlSystem extends IteratingSystem {
         else if((Math.abs(angleDiffRad - Info.rad360Deg) < Math.abs(angleDiffRad))) angleDiffRad -= Info.rad360Deg;
     }
 
-    private void handleThruster(Entity entity, TransformComponent transformComponent, PieceComponent pieceComponent) {
-        ThrusterPieceComponent thrusterComponent = thrusterPieceMapper.get(entity);
-        ThrusterPiece piece = thrusterComponent.piece;
+    private void handleThruster(TransformComponent transformComponent, PieceComponent pieceComponent) {
+        ThrusterPiece piece = (ThrusterPiece) pieceComponent.piece;
 
         float computedLinearImpulse = Info.defaultThrusterForce;
 
@@ -177,8 +174,8 @@ public class PlayerControlSystem extends IteratingSystem {
 
 
         if(activated) {
-            float angleX = (float) Math.cos(transformComponent.angleRad + thrusterComponent.piece.rotation * Info.rad90Deg);
-            float angleY = (float) Math.sin(transformComponent.angleRad + thrusterComponent.piece.rotation * Info.rad90Deg);
+            float angleX = (float) Math.cos(transformComponent.angleRad + piece.rotation * Info.rad90Deg);
+            float angleY = (float) Math.sin(transformComponent.angleRad + piece.rotation * Info.rad90Deg);
             Vector2 fixtureCenter = pieceComponent.fixtureCenter;
 
             var q = thrusterForces.get(piece.rotation);
@@ -193,9 +190,8 @@ public class PlayerControlSystem extends IteratingSystem {
 
     }
 
-    private void handleWeapon(Entity entity, PieceComponent pieceComponent, float deltaTime) {
-        WeaponPieceComponent weaponComponent = weaponPieceMapper.get(entity);
-        WeaponPiece piece = weaponComponent.piece;
+    private void handleWeapon(PieceComponent pieceComponent, float deltaTime) {
+        WeaponPiece piece = (WeaponPiece) pieceComponent.piece;
 
         // weapon angle, oriented to mouse
         if(!piece.fixedAngle) {
@@ -226,9 +222,9 @@ public class PlayerControlSystem extends IteratingSystem {
         }
     }
 
-    public void handleTractorBeam(PieceComponent pieceComponent) {
-        TractorBeamPiece piece = (TractorBeamPiece) pieceComponent.piece;
-        piece.activated = controller.keysDown.get(piece.activateKey, 0) == 1;
+    public void handleTractorBeam(TractorBeamPieceComponent tractorBeamPieceComponent) {
+        TractorBeamPiece piece = tractorBeamPieceComponent.piece;
+        tractorBeamPieceComponent.active = controller.keysDown.get(piece.activateKey, 0) == 1;
 
     }
 
@@ -273,6 +269,27 @@ public class PlayerControlSystem extends IteratingSystem {
     }
 
     private void applyForces() {
+        int keysPressed = controller.keysDown.get(Input.Keys.W, 0) + controller.keysDown.get(Input.Keys.A, 0) + controller.keysDown.get(Input.Keys.S, 0) + controller.keysDown.get(Input.Keys.D, 0);
+        if(keysPressed == 0) {
+            boolean firstIsSmaller = Math.abs(thrusterForces.get(0).first) + Math.abs(thrusterForces.get(0).second) < Math.abs(thrusterForces.get(2).first) + Math.abs(thrusterForces.get(2).second);
+            if(Math.signum(thrusterForces.get(0).first) != Math.signum(thrusterForces.get(2).first)) {
+                if(firstIsSmaller) thrusterForces.get(2).first = -thrusterForces.get(0).first;
+                else thrusterForces.get(0).first = -thrusterForces.get(2).first;
+            } else {
+                if(firstIsSmaller) thrusterForces.get(2).first = thrusterForces.get(0).first;
+                else thrusterForces.get(0).first = thrusterForces.get(2).first;
+            }
+
+            firstIsSmaller = Math.abs(thrusterForces.get(1).first) + Math.abs(thrusterForces.get(1).second) < Math.abs(thrusterForces.get(3).first) + Math.abs(thrusterForces.get(3).second);
+            if(Math.signum(thrusterForces.get(1).first) != Math.signum(thrusterForces.get(3).first)) {
+                if(firstIsSmaller) thrusterForces.get(3).first = -thrusterForces.get(1).first;
+                else thrusterForces.get(1).first = -thrusterForces.get(3).first;
+            } else {
+                if(firstIsSmaller) thrusterForces.get(3).first = thrusterForces.get(1).first;
+                else thrusterForces.get(1).first = thrusterForces.get(3).first;
+            }
+
+        }
         for(int i = 0; i < thrusterForces.size; i++) {
             if(thrusterForces.get(i).fifth == 0) continue;
             playerBody.applyForce(
@@ -283,8 +300,6 @@ public class PlayerControlSystem extends IteratingSystem {
                     thrusterForces.get(i).forth,
                     true
             );
-
-//            ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(i).third, thrusterForces.get(i).forth, .5f);
 
             thrusterForces.get(i).set(0f, 0f, 0f, 0f, 0);
             // TODO set speed limit, use normalization (.nor())

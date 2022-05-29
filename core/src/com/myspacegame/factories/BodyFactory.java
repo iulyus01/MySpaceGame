@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.myspacegame.Info;
 import com.myspacegame.components.ShipComponent;
+import com.myspacegame.components.TeleporterComponent;
 import com.myspacegame.entities.Piece;
 
 public class BodyFactory {
@@ -49,6 +50,11 @@ public class BodyFactory {
                 fixtureDef.friction = .1f;
                 fixtureDef.restitution = .2f;
                 break;
+            case TELEPORTER:
+                fixtureDef.density = 2;
+                fixtureDef.friction = 0;
+                fixtureDef.restitution = 0;
+                break;
         }
         return fixtureDef;
     }
@@ -68,7 +74,7 @@ public class BodyFactory {
                 bodyDef.fixedRotation = true;
                 bodyDef.bullet = true;
                 break;
-            case WALL:
+            case WALL: case TELEPORTER:
                 bodyDef.type = BodyDef.BodyType.StaticBody;
                 break;
             case ROCK:
@@ -153,6 +159,27 @@ public class BodyFactory {
         return body;
     }
 
+    public Body createTeleporterBody(float x, float y, float radius, Entity entity) {
+        BodyDef bodyDef = initBodyDef(Info.EntityType.TELEPORTER, false);
+        bodyDef.position.x = x;
+        bodyDef.position.y = y;
+        bodyDef.angle = MathUtils.random(0, Info.rad360Deg);
+
+        Body body = world.createBody(bodyDef);
+
+        CircleShape shape = new CircleShape();
+        shape.setRadius(radius);
+
+        FixtureDef fixtureDef = initFixtureDef(Info.EntityType.TELEPORTER);
+        fixtureDef.shape = shape;
+        fixtureDef.isSensor = true;
+        Fixture fixture = body.createFixture(fixtureDef);
+        fixture.setUserData(entity);
+        shape.dispose();
+
+        return body;
+    }
+
     public Body createWallBody(float x, float y, float width, float height, Entity entity) {
         BodyDef bodyDef = initBodyDef(Info.EntityType.WALL, false);
         bodyDef.position.x = x;
@@ -196,6 +223,14 @@ public class BodyFactory {
         shape.dispose();
 
         return fixture;
+    }
+
+    public void removeBody(Body body) {
+        System.out.println(body.getFixtureList().size);
+        for(Fixture fixture : body.getFixtureList()) {
+            body.destroyFixture(fixture);
+        }
+        world.destroyBody(body);
     }
 
     // this is used when swimming, you can't swim up if you're outside the water

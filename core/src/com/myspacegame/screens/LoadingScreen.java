@@ -154,6 +154,12 @@ public class LoadingScreen implements Screen {
         game.assetManager.load("images/Rock2.png", Texture.class);
         game.assetManager.load("images/Rock3.png", Texture.class);
         game.assetManager.load("images/Rock4.png", Texture.class);
+        game.assetManager.load("images/Teleporter.png", Texture.class);
+        game.assetManager.load("images/TeleporterRock0.png", Texture.class);
+        game.assetManager.load("images/TeleporterRock1.png", Texture.class);
+        game.assetManager.load("images/TeleporterRock2.png", Texture.class);
+        game.assetManager.load("images/TeleporterRock3.png", Texture.class);
+        game.assetManager.load("images/TeleporterRock4.png", Texture.class);
 
 //        game.assetManager.load("ui/GoUpButton.png", Texture.class);
 //        game.assetManager.load("ui/GoUpButtonOver.png", Texture.class);

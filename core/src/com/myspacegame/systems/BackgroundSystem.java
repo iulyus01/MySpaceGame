@@ -83,7 +83,7 @@ public class BackgroundSystem extends IteratingSystem {
 
         textureComponent.textureRegion.setRegion((int) srcX, (int) srcY, (int) srcWidth, (int) srcHeight);
 //        textureComponent.textureRegion.setRegion(500, 500, 500, 500);
-        System.out.println("crop: " + srcX + " " + srcY + " " + srcWidth + " " + srcHeight);
+//        System.out.println("crop: " + srcX + " " + srcY + " " + srcWidth + " " + srcHeight);
     }
 
     private void processSmallDot(TransformComponent transform) {

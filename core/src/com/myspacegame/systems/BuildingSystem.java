@@ -14,6 +14,7 @@ import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.*;
 import com.myspacegame.entities.Anchor;
 import com.myspacegame.entities.Piece;
+import com.myspacegame.entities.ShipData;
 import com.myspacegame.factories.BodyFactory;
 import com.myspacegame.factories.EntitiesFactory;
 import com.myspacegame.factories.ShapeRenderingDebug;
@@ -31,7 +32,7 @@ public class BuildingSystem extends IteratingSystem {
     private final Engine engine;
     private final World world;
 
-    private final ShipComponent playerShip;
+    private final ShipData playerShip;
     private final Body playerShipBody;
 
     private boolean isDraggingPiece = false;
@@ -61,7 +62,7 @@ public class BuildingSystem extends IteratingSystem {
         toAttachAnchors = new Array<>(false, 20, Info.Pair.class);
 
         Entity playerEntity = engine.getEntitiesFor(Family.all(PlayerComponent.class, ShipComponent.class, PieceComponent.class).get()).first();
-        playerShip = shipMapper.get(playerEntity);
+        playerShip = shipMapper.get(playerEntity).shipData;
         playerShipBody = pieceMapper.get(playerEntity).fixture.getBody();
 
     }
@@ -213,7 +214,7 @@ public class BuildingSystem extends IteratingSystem {
     }
 
 
-    public void buildingAdjustAttachAnchors(ShipComponent playerShip, PieceComponent pieceComponent, Array<Info.Pair<Anchor, Anchor>> toAttachAnchors) {
+    public void buildingAdjustAttachAnchors(ShipData playerShip, PieceComponent pieceComponent, Array<Info.Pair<Anchor, Anchor>> toAttachAnchors) {
         float maxDistanceCheck2 = Info.maxPieceSize * Info.maxPieceSize * 2.25f;
 
         for(int i = 0; i < toAttachAnchors.size; i++) {
@@ -250,21 +251,21 @@ public class BuildingSystem extends IteratingSystem {
         }
     }
 
-    public void buildingAttachPiece(Entity entity, ShipComponent shipComponent, Body shipBody, PieceComponent pieceComponent, Array<Info.Pair<Anchor, Anchor>> attachAnchors) {
+    public void buildingAttachPiece(Entity entity, ShipData shipData, Body shipBody, PieceComponent pieceComponent, Array<Info.Pair<Anchor, Anchor>> attachAnchors) {
         if(shipBody == null) return;
 
         Piece piece = pieceComponent.piece;
-        piece.actorId = shipComponent.piecesArray.get(0).actorId;
+        piece.actorId = shipData.piecesArray.get(0).actorId;
         Anchor shipAnchor = attachAnchors.first().first;
         Anchor pieceAnchor = attachAnchors.first().second;
 
         float offsetX = shipAnchor.pos.x - pieceAnchor.pos.x;
         float offsetY = shipAnchor.pos.y - pieceAnchor.pos.y;
 
-        shipComponent.piecesArray.add(piece);
+        shipData.piecesArray.add(piece);
 
-        piece.pos.x = Math.round(((pieceComponent.fixtureCenter.x + offsetX - shipComponent.core.pieceComponent.fixtureCenter.x) / Info.blockSize) * 2) / 2f;
-        piece.pos.y = Math.round(((pieceComponent.fixtureCenter.y + offsetY - shipComponent.core.pieceComponent.fixtureCenter.y) / Info.blockSize) * 2) / 2f;
+        piece.pos.x = Math.round(((pieceComponent.fixtureCenter.x + offsetX - shipData.core.pieceComponent.fixtureCenter.x) / Info.blockSize) * 2) / 2f;
+        piece.pos.y = Math.round(((pieceComponent.fixtureCenter.y + offsetY - shipData.core.pieceComponent.fixtureCenter.y) / Info.blockSize) * 2) / 2f;
 
         for(var pair : attachAnchors) {
             pair.first.piece = piece;
@@ -277,6 +278,8 @@ public class BuildingSystem extends IteratingSystem {
         pieceComponent.fixture = bodyFactory.createPieceFixture(shipBody, piece, entity);
         world.destroyBody(pieceBody);
 
+        ShipComponent shipComponent = engine.createComponent(ShipComponent.class);
+        shipComponent.shipData = shipData;
         entity.add(engine.createComponent(PlayerComponent.class));
         entity.add(shipComponent);
 

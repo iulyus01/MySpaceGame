@@ -58,19 +58,23 @@ public class SystemManager {
         engine.addSystem(new RenderingSystem(batch));
         engine.addSystem(new RenderingRotatingSystem(batch));
         engine.addSystem(new RenderingEndSystem(batch, shapeRenderer));
+        engine.addSystem(new ShapesRenderingSystem(shapeRenderer));
 
 
         engine.addSystem(new DraggingSystem(worldFactory.getWorld()));
         engine.addSystem(new PlayerControlSystem(keyboardController, game, engine, camera));
         engine.addSystem(new BulletSystem(game, engine));
         engine.addSystem(new RockSystem());
+        engine.addSystem(new TeleporterSystem(engine, worldFactory));
+        engine.addSystem(new ShipSystem());
         engine.addSystem(new BackgroundSystem(camera));
         engine.addSystem(new CollisionSystem());
 
         engine.addSystem(new EnemyGenerationSystem(game, engine));
+        engine.addSystem(new AIControlSystem(game, engine));
 
 
-//        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
+        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
 
     }
 

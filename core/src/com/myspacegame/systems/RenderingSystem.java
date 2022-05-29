@@ -16,6 +16,8 @@ public class RenderingSystem extends SortedIteratingSystem {
     private final ComponentMapper<TextureComponent> textureMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
 
+    private float previousZ = -2;
+
     public RenderingSystem(SpriteBatch batch) {
         super(Family.all(TextureComponent.class, TransformComponent.class).get(), new ZComparator());
         this.batch = batch;
@@ -27,12 +29,19 @@ public class RenderingSystem extends SortedIteratingSystem {
     @Override
     public void update(float deltaTime) {
         super.update(deltaTime);
+        previousZ = -2;
     }
 
     @Override
     public void processEntity(Entity entity, float deltaTime) {
         TextureComponent texture = textureMapper.get(entity);
         TransformComponent transform = transformMapper.get(entity);
+
+        if(transform.position.z < previousZ) {
+            System.out.println("################ NoOoOoOoOoOoOo ################");
+            System.out.println("");
+            previousZ = transform.position.z;
+        }
 
         if(texture.textureRegion == null || transform.isHidden) return;
 

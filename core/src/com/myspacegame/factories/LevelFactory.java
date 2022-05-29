@@ -1,17 +1,18 @@
 package com.myspacegame.factories;
 
-import com.badlogic.ashley.core.Entity;
-import com.badlogic.ashley.core.PooledEngine;
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.ashley.core.*;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.myspacegame.Info;
 import com.myspacegame.MainClass;
+import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.HullPieceComponent;
 import com.myspacegame.components.pieces.ThrusterPieceComponent;
 import com.myspacegame.components.pieces.WeaponPieceComponent;
+import com.myspacegame.entities.Area;
+import com.myspacegame.entities.ShipData;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LevelFactory {
@@ -22,8 +23,9 @@ public class LevelFactory {
     private final BackgroundFactory backgroundFactory;
     private final EntitiesFactory entitiesFactory;
 
-    private final int currentLevel = 0;
-    private final List<Color> backgroundColor;
+    private final ComponentMapper<ShipComponent> shipMapper;
+
+    private Area currentArea;
 
     private LevelFactory(MainClass game, PooledEngine engine, World world) {
         this.engine = engine;
@@ -32,22 +34,45 @@ public class LevelFactory {
         backgroundFactory = BackgroundFactory.getInstance(game, engine, world);
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
 
-        backgroundColor = new ArrayList<>();
-//        backgroundColor.add();
+        shipMapper = ComponentMapper.getFor(ShipComponent.class);
+
     }
 
-    public void createLevel(WorldFactory.Point currentPoint) {
-        generateBackground(currentPoint.difficulty);
+    public void setPlayerPos(Vector2 pos) {
+        Family family = Family.all(PlayerComponent.class, ShipCoreComponent.class).get();
+        Entity playerEntity = engine.getEntitiesFor(family).first();
+        ShipData shipData = shipMapper.get(playerEntity).shipData;
+        shipData.core.pieceComponent.fixture.getBody().setTransform(pos, shipData.core.pieceComponent.fixture.getBody().getAngle());
+    }
 
-        addPlayer();
+    public void createLevel(Area currentArea, boolean withPlayer) {
+        this.currentArea = currentArea;
 
-        createWalls();
+        addBackground(currentArea.difficulty);
 
-//        addRocks();
+        if(withPlayer) addPlayer();
+
+        addRockWalls();
+
+        addRocks();
+
+        addTeleports();
 
         for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPieceEntity(HullPieceComponent.class, true, 0, 0));
         for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPieceEntity(WeaponPieceComponent.class, true, 0, 0));
         for(int i = 0; i < 5; i++) engine.addEntity(entitiesFactory.createPieceEntity(ThrusterPieceComponent.class, true, 0, 0));
+    }
+
+    public void destroyLevel() {
+        removeBackground();
+
+        removeRocks();
+
+        removeTeleports();
+
+        removeLostPieces();
+
+        removeShips();
     }
 
     public static LevelFactory getInstance(MainClass game, PooledEngine engine, World world) {
@@ -61,7 +86,7 @@ public class LevelFactory {
         return enemyEntities.get(0);
     }
 
-    private void generateBackground(int difficulty) {
+    private void addBackground(int difficulty) {
         backgroundFactory.generate(difficulty);
     }
 
@@ -71,7 +96,7 @@ public class LevelFactory {
 
     }
 
-    private void createWalls() {
+    private void addRockWalls() {
         Entity entity;
         int nr = 80;
         float posX;
@@ -105,6 +130,53 @@ public class LevelFactory {
             engine.addEntity(entity);
         }
 
+    }
+
+    private void addRocks() {
+        Entity entity;
+        int nr = 6;
+        float posX;
+        float posY;
+        for(int i = 0; i < nr; i++) {
+            // right
+            posX = MathUtils.random(-Info.worldWidthLimit, Info.worldWidthLimit);
+            posY = MathUtils.random(-Info.worldHeightLimit, Info.worldHeightLimit);
+            if(Math.abs(posX) < Info.blockSize * 20 && Math.abs(posY) < Info.blockSize * 20) {
+                i--;
+                continue;
+            }
+            entity = entitiesFactory.createRockEntity(0, posX, posY, true);
+            engine.addEntity(entity);
+        }
+    }
+
+    private void addTeleports() {
+        Entity entity;
+        for(int i = 0; i < currentArea.to.size; i++) {
+            entity = entitiesFactory.createTeleporterEntity(currentArea, currentArea.to.get(i).first, currentArea.to.get(i).second);
+            engine.addEntity(entity);
+        }
+    }
+
+    private void removeBackground() {
+        backgroundFactory.destroy();
+
+    }
+
+    private void removeRocks() {
+        entitiesFactory.removeRockEntities();
+    }
+
+    private void removeTeleports() {
+        entitiesFactory.removeTeleportEntities();
+    }
+
+    private void removeLostPieces() {
+        entitiesFactory.removeLostPieces();
+    }
+
+    private void removeShips() {
+        entitiesFactory.removeShips();
     }
 
     public World getWorld() {

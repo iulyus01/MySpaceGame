@@ -1,8 +1,7 @@
 package com.myspacegame.factories;
 
-import com.badlogic.ashley.core.Component;
-import com.badlogic.ashley.core.Engine;
-import com.badlogic.ashley.core.Entity;
+import com.badlogic.ashley.core.*;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -25,6 +24,11 @@ public class EntitiesFactory {
     private final Engine engine;
     private final BodyFactory bodyFactory;
 
+    private final ComponentMapper<BodyComponent> bodyMapper;
+    private final ComponentMapper<PieceComponent> pieceMapper;
+    private final ComponentMapper<ShipComponent> shipMapper;
+    private final ComponentMapper<AnchorComponent> anchorMapper;
+
     private final TextureRegion anchorTexture;
     private final TextureRegion pieceHoverTexture;
 
@@ -33,6 +37,12 @@ public class EntitiesFactory {
         this.engine = engine;
 
         bodyFactory = BodyFactory.getInstance(world);
+
+        bodyMapper = ComponentMapper.getFor(BodyComponent.class);
+        pieceMapper = ComponentMapper.getFor(PieceComponent.class);
+        shipMapper = ComponentMapper.getFor(ShipComponent.class);
+        anchorMapper = ComponentMapper.getFor(AnchorComponent.class);
+
         anchorTexture = new TextureRegion(game.assetManager.get("images/anchor.png", Texture.class));
         pieceHoverTexture = new TextureRegion(game.assetManager.get("images/hover.png", Texture.class));
     }
@@ -47,14 +57,14 @@ public class EntitiesFactory {
     }
 
     public List<Entity> createShip(String[] shipString, float shipX, float shipY, int actorId, boolean isPlayer) {
-        ShipComponent shipComponent = engine.createComponent(ShipComponent.class);
-        extractShipString(shipString, shipComponent, actorId);
+        ShipData shipData = new ShipData();
+        extractShipString(shipString, shipData, actorId);
 
         Body body = bodyFactory.createPieceBody(shipX, shipY, 0, false);
 
         List<Entity> entities = new ArrayList<>();
 
-        buildShipEntities(entities, shipComponent, body, isPlayer);
+        buildShipEntities(entities, shipData, body, isPlayer);
 
         return entities;
     }
@@ -164,7 +174,7 @@ public class EntitiesFactory {
         Entity entity = engine.createEntity();
         TextureComponent textureComponent = createTextureComponent("images/bullet.png");
         BulletComponent bulletComponent = createBulletComponent(actorId);
-        TransformComponent transformComponent = createTransformComponent(sizeWidth, sizeHeight, angleRad, 0, textureComponent, Info.ZOrder.BULLETS);
+        TransformComponent transformComponent = createTransformComponent(sizeWidth, sizeHeight, angleRad, 0, textureComponent, Info.ZOrder.BULLET);
         Body body = bodyFactory.createBulletBody(x, y, Info.blockSize * 2, Info.blockSize / 2, angleRad, Info.defaultBulletImpulse, entity);
         BodyComponent bodyComponent = createBodyComponent(body);
         CollisionComponent collisionComponent = createCollisionComponent();
@@ -242,7 +252,7 @@ public class EntitiesFactory {
         }
         width *= 2;
         height *= 2;
-        TransformComponent transformComponent = createTransformComponent(width, height, angleRad, 0, textureComponent, Info.ZOrder.ROCKS);
+        TransformComponent transformComponent = createTransformComponent(width, height, angleRad, 0, textureComponent, Info.ZOrder.ROCK);
         RockComponent rockComponent = createRockComponent();
 
         Body body = bodyFactory.createRockBody(index, x, y, angleRad, sizeRatio, 0, 0, entity);
@@ -259,19 +269,120 @@ public class EntitiesFactory {
         return entity;
     }
 
+    public Entity createTeleporterEntity(Area currentArea, Area destArea, Vector2 pos) {
+        Entity entity = engine.createEntity();
+        TextureComponent textureComponent = createTextureComponent("images/Teleporter.png");
+
+        float radius = Info.baseTeleporterRadius + destArea.difficulty * Info.blockSize;
+        TransformComponent transformComponent = createTransformComponent(radius * 2, radius * 2, 0, 0, textureComponent, Info.ZOrder.TELEPORTER);
+        TeleporterComponent teleporterComponent = createTeleporterComponent(currentArea, destArea, radius * radius);
+
+        Body body = bodyFactory.createTeleporterBody(pos.x, pos.y, radius, entity);
+        BodyComponent bodyComponent = createBodyComponent(body);
+
+        CollisionComponent collisionComponent = createCollisionComponent();
+
+        entity.add(teleporterComponent);
+        entity.add(textureComponent);
+        entity.add(transformComponent);
+        entity.add(bodyComponent);
+        entity.add(collisionComponent);
+
+        for(int i = 0; i < 20; i++) {
+            // 5 for each section of trigonometric circle
+            engine.addEntity(createTeleporterRockEntity(teleporterComponent, i, pos.x, pos.y, transformComponent, textureComponent));
+        }
+
+        return entity;
+    }
+
+    public Entity createTeleporterRockEntity(TeleporterComponent teleporterComponent, int index, float teleporterX, float teleporterY, TransformComponent teleporterTransform, TextureComponent teleporterTexture) {
+        Entity entity = engine.createEntity();
+        TextureComponent textureComponent = createTextureComponent("images/TeleporterRock" + (index % 5) + ".png");
+
+        int orientation = index / 5;
+        float[] angles = new float[]{1.211f, .909f, .586f, .329f, .184f};
+        float[] radiiRatio = new float[]{.968f, .916f, .982f, .959f, 0.952f};
+
+        float angleRad = angles[index % 5] + orientation * Info.rad90Deg;
+        float baseRadius = radiiRatio[index % 5] * teleporterTransform.width / 2;
+        float offsetRadius = MathUtils.random(Info.blockSize, Info.blockSize * 3);
+        float delayMax = MathUtils.random(3f, 4f);
+
+        float width = teleporterTransform.width / teleporterTexture.textureRegion.getRegionWidth() * textureComponent.textureRegion.getRegionWidth();
+        float height = teleporterTransform.height / teleporterTexture.textureRegion.getRegionHeight() * textureComponent.textureRegion.getRegionHeight();
+        TransformComponent transformComponent = createTransformComponent(width, height, 0,  orientation * Info.rad90Deg, textureComponent, Info.ZOrder.TELEPORTER);
+        TeleporterRockComponent teleporterRockComponent = createTeleporterRockComponent(teleporterComponent, teleporterTransform, teleporterX, teleporterY, baseRadius, offsetRadius, angleRad, delayMax);
+
+        entity.add(teleporterRockComponent);
+        entity.add(textureComponent);
+        entity.add(transformComponent);
+
+        return entity;
+    }
+
     public void removePieceHoverEntity(Entity entity) {
         engine.removeEntity(entity);
+    }
+
+    public void removeRockEntities() {
+        Family family = Family.one(RockComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            BodyComponent bodyComponent = bodyMapper.get(entity);
+            bodyFactory.removeBody(bodyComponent.body);
+        }
+        engine.removeAllEntities(family);
+    }
+
+    public void removeTeleportEntities() {
+        Family family = Family.one(TeleporterComponent.class, TeleporterRockComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            BodyComponent bodyComponent = bodyMapper.get(entity);
+            if(bodyComponent == null) continue;
+            bodyFactory.removeBody(bodyComponent.body);
+        }
+        engine.removeAllEntities(family);
+    }
+
+    public void removeLostPieces() {
+        Family family = Family.one(PieceComponent.class).exclude(ShipComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            PieceComponent pieceComponent = pieceMapper.get(entity);
+            bodyFactory.removeBody(pieceComponent.fixture.getBody());
+        }
+        engine.removeAllEntities(family);
+
+        family = Family.one(AnchorComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            AnchorComponent anchorComponent = anchorMapper.get(entity);
+            if(anchorComponent.piece.pieceComponent == null) {
+                System.out.println("NULLLLLLl");
+                // TODO something's wrong with tping and finish this ^^
+            }
+        }
+    }
+
+    public void removeShips() {
+        Family family = Family.all(NPCComponent.class, ShipCoreComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            ShipData shipData = shipMapper.get(entity).shipData;
+            shipData.piecesArray.clear();
+            bodyFactory.removeBody(shipData.core.pieceComponent.fixture.getBody());
+        }
+
+        family = Family.all(NPCComponent.class, ShipComponent.class).get();
+        engine.removeAllEntities(family);
     }
 
 
 
 
-    private Piece getPieceType(String type, int rotation, ShipComponent shipComponent) {
+    private Piece getPieceType(String type, int rotation, ShipData shipData) {
         Piece piece;
         switch(type.charAt(0)) {
             case '0':
                 piece = new CorePiece();
-                shipComponent.core = piece;
+                shipData.core = piece;
                 break;
             case '1': case '2': default:
                 piece = new HullPiece();
@@ -289,7 +400,7 @@ public class EntitiesFactory {
         return piece;
     }
 
-    private void extractShipString(String[] shipString, ShipComponent shipComponent, int actorId) {
+    private void extractShipString(String[] shipString, ShipData shipData, int actorId) {
         int capacity = 0;
         for(String s : shipString) {
             if(s.length() == 0) break;
@@ -297,13 +408,13 @@ public class EntitiesFactory {
         }
 
         // create pieces array
-        shipComponent.piecesArray = new Array<>(false, capacity, Piece.class);
-        for(int i = 0; i < capacity; i++) shipComponent.piecesArray.add(null);
+        shipData.piecesArray = new Array<>(false, capacity, Piece.class);
+        for(int i = 0; i < capacity; i++) shipData.piecesArray.add(null);
         for(int i = 0; i < capacity; i++) {
             String[] spliced = shipString[i].split("\\s+");
             int pieceIndex = Integer.parseInt(spliced[0]);
             int rotation = Integer.parseInt(spliced[2]);
-            Piece toAddPiece = getPieceType(spliced[1], rotation, shipComponent);
+            Piece toAddPiece = getPieceType(spliced[1], rotation, shipData);
 
             int pieceConfigId = Info.parseFirstInteger(spliced[1]);
 
@@ -320,10 +431,8 @@ public class EntitiesFactory {
 
             // if pieceIndex is higher than piecesNr it will crash
             // TODO not sure if i have to treat this case ^^
-            shipComponent.piecesArray.set(pieceIndex, toAddPiece);
+            shipData.piecesArray.set(pieceIndex, toAddPiece);
         }
-        // set pos: 0, 0 to core
-        shipComponent.piecesArray.get(0).pos = new Vector2(0, 0);
 
         // create anchors graph
         for(int i = capacity + 1; i < shipString.length; i++) {
@@ -331,7 +440,7 @@ public class EntitiesFactory {
             int spliceI = 0;
             int pieceIndex = Integer.parseInt(firstSplice[spliceI++]);
 
-            Piece piece = shipComponent.piecesArray.get(pieceIndex);
+            Piece piece = shipData.piecesArray.get(pieceIndex);
             piece.anchors = new Array<>();
 
             // go through edges
@@ -347,7 +456,7 @@ public class EntitiesFactory {
                     if(spliced[j + 1].charAt(0) == '-') nextPiece = null;
                     else {
                         int nextPieceId = Integer.parseInt(spliced[j + 1]);
-                        nextPiece = shipComponent.piecesArray.get(nextPieceId);
+                        nextPiece = shipData.piecesArray.get(nextPieceId);
                     }
                     piece.anchors.add(new Anchor(edgeId, edgeAnchorId, nextPiece, piece));
 
@@ -356,8 +465,8 @@ public class EntitiesFactory {
         }
     }
 
-    private void buildShipEntities(List<Entity> entities, ShipComponent shipComponent, Body body, boolean isPlayer) {
-        var array = shipComponent.piecesArray;
+    private void buildShipEntities(List<Entity> entities, ShipData shipData, Body body, boolean isPlayer) {
+        var array = shipData.piecesArray;
         for(Piece piece : array) {
             Entity entity = engine.createEntity();
 
@@ -368,6 +477,7 @@ public class EntitiesFactory {
 
             CollisionComponent collisionComponent = createCollisionComponent();
             TextureComponent textureComponent = createTextureComponent(Info.PIECE_TEXTURE_PATH + Info.pieceConfigsMap.get(piece.pieceConfigId).textureName);
+            ShipComponent shipComponent = createShipComponent(shipData);
 
             if(piece instanceof CorePiece) {
                 transformComponent = createTransformComponent(piece.W, piece.H, 0, 0, textureComponent, Info.ZOrder.PIECE);
@@ -394,11 +504,14 @@ public class EntitiesFactory {
 
             entity.add(transformComponent);
             entity.add(textureComponent);
-            entity.add(pieceComponent);
             entity.add(shipComponent);
+            entity.add(pieceComponent);
             entity.add(collisionComponent);
             if(specificPieceComponent != null) entity.add(specificPieceComponent);
-            if(piece instanceof CorePiece) entity.add(engine.createComponent(ShipCoreComponent.class));
+            if(piece instanceof CorePiece) {
+                entity.add(engine.createComponent(ShipCoreComponent.class));
+                if(!isPlayer) entity.add(engine.createComponent(AIComponent.class));
+            }
             if(isPlayer) entity.add(engine.createComponent(PlayerComponent.class));
             else entity.add(engine.createComponent(NPCComponent.class));
 
@@ -445,6 +558,12 @@ public class EntitiesFactory {
         return bodyComponent;
     }
 
+    private ShipComponent createShipComponent(ShipData shipData) {
+        ShipComponent shipComponent = engine.createComponent(ShipComponent.class);
+        shipComponent.shipData = shipData;
+        return shipComponent;
+    }
+
     private PieceComponent createPieceComponent(Piece piece) {
         PieceComponent simplePieceComponent = engine.createComponent(PieceComponent.class);
         simplePieceComponent.piece = piece;
@@ -489,6 +608,27 @@ public class EntitiesFactory {
 
     private RockComponent createRockComponent() {
         return engine.createComponent(RockComponent.class);
+    }
+
+    private TeleporterComponent createTeleporterComponent(Area currentArea, Area destArea, float radius) {
+        TeleporterComponent teleporterComponent = engine.createComponent(TeleporterComponent.class);
+        teleporterComponent.currentArea = currentArea;
+        teleporterComponent.destArea = destArea;
+        teleporterComponent.activationDistanceMin = radius;
+        return teleporterComponent;
+    }
+
+    private TeleporterRockComponent createTeleporterRockComponent(TeleporterComponent teleporterComponent, TransformComponent teleporterTransform, float teleporterX, float teleporterY, float baseRadius, float radiusMax, float angleRad, float delayMax) {
+        TeleporterRockComponent teleporterRockComponent = engine.createComponent(TeleporterRockComponent.class);
+        teleporterRockComponent.teleporterComponent = teleporterComponent;
+        teleporterRockComponent.teleporterTransform = teleporterTransform;
+        teleporterRockComponent.teleporterX = teleporterX;
+        teleporterRockComponent.teleporterY = teleporterY;
+        teleporterRockComponent.angleRad = angleRad;
+        teleporterRockComponent.baseRadius = baseRadius;
+        teleporterRockComponent.offsetRadius = radiusMax;
+        teleporterRockComponent.delayMax = delayMax;
+        return teleporterRockComponent;
     }
 
     private CollisionComponent createCollisionComponent() {

@@ -4,7 +4,7 @@
         "name": "core1x1",
         "width": 1,
         "height": 1,
-        "hp": 10.0,
+        "hp": 30.0,
         "texture": "core.png",
         "edges": [
             {
@@ -50,7 +50,7 @@
         "name": "hull1x1",
         "width": 1,
         "height": 1,
-        "hp": 3.0,
+        "hp": 10.0,
         "texture": "hull.png",
         "edges": [
             {
@@ -96,7 +96,7 @@
         "name": "hull3x1",
         "width": 3,
         "height": 1,
-        "hp": 6.0,
+        "hp": 45.0,
         "texture": "hull3x1.png",
         "edges": [
             {
@@ -146,7 +146,7 @@
         "name": "thruster1x1",
         "width": 1,
         "height": 1,
-        "hp": 3.0,
+        "hp": 10.0,
         "texture": "thruster.png",
         "edges": [
             {
@@ -186,7 +186,7 @@
         "name": "weapon1x1",
         "width": 1,
         "height": 1,
-        "hp": 3.0,
+        "hp": 15.0,
         "texture": "hull.png",
         "edges": [
             {
@@ -232,7 +232,7 @@
         "name": "TractorBeam1x1",
         "width": 1,
         "height": 1,
-        "hp": 3.0,
+        "hp": 10.0,
         "texture": "TractorBeam.png",
         "edges": [
             {
@@ -272,7 +272,7 @@
         "name": "hull2x2",
         "width": 2,
         "height": 2,
-        "hp": 8.0,
+        "hp": 60.0,
         "texture": "hull.png",
         "edges": [
             {
@@ -322,7 +322,7 @@
         "name": "hull3x3",
         "width": 3,
         "height": 3,
-        "hp": 18.0,
+        "hp": 135.0,
         "texture": "hull.png",
         "edges": [
             {

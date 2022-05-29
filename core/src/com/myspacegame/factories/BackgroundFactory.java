@@ -2,6 +2,7 @@ package com.myspacegame.factories;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
+import com.badlogic.ashley.core.Family;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -72,13 +73,17 @@ public class BackgroundFactory {
     public void generate(int difficulty) {
         Info.colorClear = backgroundColors.get(difficulty);
 
-        for(int i = 0; i < 50; i++) {
+        for(int i = 0; i < 80; i++) {
             int index = MathUtils.random(0, smallDotTextures.size - 1);
             float size = MathUtils.random(Info.blockSize / 10, Info.blockSize / 1.2f);
             createSmallDot(engine.createEntity(), index, size, size);
         }
 
 //        createBigDot(engine.createEntity(), bigDotTextures.get(2));
+    }
+
+    public void destroy() {
+        engine.removeAllEntities(Family.one(BackgroundComponent.class).get());
     }
 
 //    private void createBigDot(Entity entity, TextureRegion texture) {
@@ -120,9 +125,9 @@ public class BackgroundFactory {
         textureComponent.textureRegion = smallDotTextures.get(index);
 
         TransformComponent transformComponent = engine.createComponent(TransformComponent.class);
-        transformComponent.position.x = MathUtils.random(-Info.worldWidthLimit, Info.worldWidthLimit);
-        transformComponent.position.y = MathUtils.random(-Info.worldHeightLimit, Info.worldHeightLimit);
-        transformComponent.position.z = -2;
+        transformComponent.position.x = MathUtils.random(-Info.worldWidthLimit - 20, Info.worldWidthLimit + 20);
+        transformComponent.position.y = MathUtils.random(-Info.worldHeightLimit - 20, Info.worldHeightLimit + 20);
+        transformComponent.position.z = Info.ZOrder.BACKGROUND.getValue();
         transformComponent.scale.x = width / textureComponent.textureRegion.getRegionWidth();
         transformComponent.scale.y = height / textureComponent.textureRegion.getRegionHeight();
         transformComponent.angleRad = MathUtils.random(0, Info.rad360Deg);
@@ -145,7 +150,7 @@ public class BackgroundFactory {
         TransformComponent transformComponent = engine.createComponent(TransformComponent.class);
         transformComponent.position.x = x;
         transformComponent.position.y = y;
-        transformComponent.position.z = -2;
+        transformComponent.position.z = Info.ZOrder.BACKGROUND.getValue();
         transformComponent.scale.x = width / textureComponent.textureRegion.getRegionWidth();
         transformComponent.scale.y = height / textureComponent.textureRegion.getRegionHeight();
         transformComponent.angleRad = MathUtils.random(0, Info.rad360Deg);

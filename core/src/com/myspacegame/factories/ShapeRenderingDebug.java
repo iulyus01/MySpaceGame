@@ -70,22 +70,22 @@ public class ShapeRenderingDebug {
     }
 
     public static void drawDebugLine(float x1, float y1, float x2, float y2) {
+        shapes.setColor(Info.colorPurple);
         shapes.begin(ShapeRenderer.ShapeType.Filled);
-        shapes.setColor(1, .3f, .95f, 1);
         shapes.rectLine(x1, y1, x2, y2, Info.blockSize / 20);
         shapes.end();
     }
 
     public static void drawDebugCircle(float x, float y, float radius) {
+        shapes.setColor(Info.colorPurple);
         shapes.begin(ShapeRenderer.ShapeType.Filled);
-        shapes.setColor(1, .3f, .95f, 1);
         shapes.circle(x, y, radius);
         shapes.end();
     }
 
     public static void drawDebugLine(float x1, float y1, float x2, float y2, Color color) {
-        shapes.begin(ShapeRenderer.ShapeType.Filled);
         shapes.setColor(color);
+        shapes.begin(ShapeRenderer.ShapeType.Filled);
         shapes.rectLine(x1, y1, x2, y2, Info.blockSize / 16);
         shapes.end();
     }
@@ -96,8 +96,8 @@ public class ShapeRenderingDebug {
     }
 
     public static void drawDebugPolygon(float[] vertices) {
+        shapes.setColor(Info.colorPurple);
         shapes.begin(ShapeRenderer.ShapeType.Filled);
-        shapes.setColor(1, .3f, .95f, 1);
         for(int i = 0; i < vertices.length - 2;) {
             shapes.rectLine(vertices[i], vertices[i + 1], vertices[i + 2], vertices[i + 3], Info.blockSize / 20);
             i += 2;

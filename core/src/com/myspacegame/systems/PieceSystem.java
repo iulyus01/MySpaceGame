@@ -7,10 +7,12 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectSet;
 import com.myspacegame.Info;
 import com.myspacegame.MainClass;
 import com.myspacegame.components.*;
 import com.myspacegame.components.pieces.PieceComponent;
+import com.myspacegame.components.pieces.TractorBeamPieceComponent;
 import com.myspacegame.entities.Anchor;
 import com.myspacegame.entities.CorePiece;
 import com.myspacegame.entities.Piece;
@@ -26,10 +28,11 @@ public class PieceSystem extends IteratingSystem {
     private final ComponentMapper<PieceComponent> pieceMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<ShipComponent> shipMapper;
+    private final ComponentMapper<TractorBeamPieceComponent> tractorBeamPieceMapper;
 
     private final BodyFactory bodyFactory;
     private final Array<Piece> toDetach;
-    private final com.badlogic.gdx.utils.ObjectSet<TractorBeamPiece> tractorBeamPieces;
+    private final ObjectSet<TractorBeamPieceComponent> tractorBeamPieces;
 
     public PieceSystem(MainClass game, PooledEngine engine) {
         super(Family.all(PieceComponent.class, TransformComponent.class).get());
@@ -40,9 +43,10 @@ public class PieceSystem extends IteratingSystem {
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         shipMapper = ComponentMapper.getFor(ShipComponent.class);
+        tractorBeamPieceMapper = ComponentMapper.getFor(TractorBeamPieceComponent.class);
 
         toDetach = new Array<>(false, 16, Piece.class);
-        tractorBeamPieces = new com.badlogic.gdx.utils.ObjectSet<>(8);
+        tractorBeamPieces = new ObjectSet<>(8);
 
     }
 
@@ -62,6 +66,11 @@ public class PieceSystem extends IteratingSystem {
         transformComponent.position.y = pieceComponent.fixtureCenter.y;
 
         if(pieceComponent.isDead) {
+//            if(pieceComponent.piece instanceof CorePiece) {
+            // TODO this is a little broken rn
+//                detachShip(pieceComponent, entity);
+//                return;
+//            }
             detachPiece(pieceComponent.piece, entity, false);
             // isDead will be reset when entity is removed (component pooling)
             removeAnchorEntities(pieceComponent.piece);
@@ -72,12 +81,12 @@ public class PieceSystem extends IteratingSystem {
             pieceComponent.isManuallyDetached = false;
         }
         if(pieceComponent.toRemoveAnchors) {
-            removeAnchors(pieceComponent.piece, entity);
+            removeAnchors(pieceComponent.piece, entity, true);
             pieceComponent.toRemoveAnchors = false;
         }
 
-        if(pieceComponent.piece instanceof TractorBeamPiece) {
-            tractorBeamPiece((TractorBeamPiece) pieceComponent.piece);
+        if(tractorBeamPieceMapper.has(entity)) {
+            tractorBeamPiece(tractorBeamPieceMapper.get(entity), deltaTime);
         }
 
         if(!shipMapper.has(entity)) {
@@ -88,7 +97,7 @@ public class PieceSystem extends IteratingSystem {
     private void detachPiece(Piece piece, Entity entity, boolean recreateFixture) {
         boolean isShip = shipMapper.has(entity);
         if(isShip) {
-            Array<Piece> piecesArray = shipMapper.get(entity).piecesArray;
+            Array<Piece> piecesArray = shipMapper.get(entity).shipData.piecesArray;
             for(Piece p : piecesArray) p.checked = 0;
         }
 
@@ -98,10 +107,7 @@ public class PieceSystem extends IteratingSystem {
             toDetach.add(anchor.piece);
         }
 
-        removeAnchors(piece, entity);
-        if(recreateFixture) recreateFixture(bodyFactory, piece.pieceComponent, entity);
-        else destroyPiece(piece.pieceComponent, entity);
-//        if(true) return;
+        removeAnchors(piece, entity, recreateFixture);
 
         Array<Piece> toDetachQueue = new Array<>(16);
         for(Piece toDetachPieceStart : toDetach) {
@@ -139,7 +145,16 @@ public class PieceSystem extends IteratingSystem {
         }
     }
 
-    private void removeAnchors(Piece piece, Entity entity) {
+    private void detachShip(PieceComponent pieceComponent, Entity entity) {
+        ShipComponent shipComponent = shipMapper.get(entity);
+        for(Piece piece : shipComponent.shipData.piecesArray) {
+            recreateFixture(bodyFactory, piece.pieceComponent);
+            piece.pieceComponent.toRemoveAnchors = true;
+        }
+        destroyPiece(pieceComponent);
+    }
+
+    private void removeAnchors(Piece piece, Entity entity, boolean recreateFixture) {
         for(int i = 0; i < piece.anchors.size; i++) {
             Anchor anchor = piece.anchors.get(i);
             if(anchor.piece == null) continue;
@@ -152,14 +167,19 @@ public class PieceSystem extends IteratingSystem {
         }
 
         piece.actorId = Info.StaticActorIds.NONE.getValue();
-        if(shipMapper.has(entity)) shipMapper.get(entity).piecesArray.removeValue(piece, true);
-        recreateFixture(bodyFactory, piece.pieceComponent, entity);
+        if(shipMapper.has(entity)) {
+            shipMapper.get(entity).shipData.piecesArray.removeValue(piece, true);
+        }
+
+        if(recreateFixture) recreateFixture(bodyFactory, piece.pieceComponent);
+        else destroyPiece(piece.pieceComponent);
     }
 
-    private void recreateFixture(BodyFactory bodyFactory, PieceComponent pieceComponent, Entity entity) {
+    private void recreateFixture(BodyFactory bodyFactory, PieceComponent pieceComponent) {
         pieceComponent.piece.pos.x = 0;
         pieceComponent.piece.pos.y = 0;
 
+        Entity entity = (Entity) pieceComponent.fixture.getUserData();
         Body body = bodyFactory.createPieceBody(pieceComponent.fixtureCenter.x, pieceComponent.fixtureCenter.y, pieceComponent.fixture.getBody().getAngle(), true);
         Fixture fixture = bodyFactory.createPieceFixture(body, pieceComponent.piece, entity);
 
@@ -168,18 +188,18 @@ public class PieceSystem extends IteratingSystem {
         pieceComponent.fixture.getFilterData().maskBits = Info.MASK_NOTHING;
         pieceComponent.piece.actorId = Info.StaticActorIds.NONE.getValue();
 
-        // TODO can probably delete this
-//        if(shipMapper.has(entity)) shipMapper.get(entity).piecesArray.removeValue(pieceComponent.piece, true);
-
         entity.remove(NPCComponent.class);
         entity.remove(PlayerComponent.class);
         entity.remove(ShipComponent.class);
     }
 
-    private void destroyPiece(PieceComponent pieceComponent, Entity entity) {
+    private void destroyPiece(PieceComponent pieceComponent) {
+        if(pieceComponent.piece instanceof CorePiece) {
+            Info.playerIsDead = true;
+        }
+
+        Entity entity = (Entity) pieceComponent.fixture.getUserData();
         pieceComponent.fixture.getBody().destroyFixture(pieceComponent.fixture);
-        // TODO can probably delete this
-//        if(shipMapper.has(entity)) shipMapper.get(entity).piecesArray.removeValue(pieceComponent.piece, true);
         engine.removeEntity(entity);
     }
 
@@ -189,38 +209,64 @@ public class PieceSystem extends IteratingSystem {
         }
     }
 
-    private void tractorBeamPiece(TractorBeamPiece piece) {
-        if(!piece.activated) {
-            tractorBeamPieces.remove(piece);
-            return;
+    private void tractorBeamPiece(TractorBeamPieceComponent tractorBeamPieceComponent, float delta) {
+        if(tractorBeamPieceComponent.active) {
+            if(tractorBeamPieceComponent.state == 0) {
+                tractorBeamPieceComponent.state = 1;
+            }
+            if(tractorBeamPieceComponent.state == 1) {
+                tractorBeamPieceComponent.prepareToPullDelay += delta;
+                tractorBeamPieces.add(tractorBeamPieceComponent);
+            }
+            if(tractorBeamPieceComponent.prepareToPullDelay >= tractorBeamPieceComponent.prepareToPullDelayMax) {
+                tractorBeamPieceComponent.state = 2;
+            }
+        } else {
+            if(tractorBeamPieceComponent.state == 2) {
+                tractorBeamPieceComponent.state = 3;
+            }
+            if(tractorBeamPieceComponent.state == 3) {
+                tractorBeamPieceComponent.ceasePullDelay += delta;
+            }
+            if(tractorBeamPieceComponent.ceasePullDelay >= tractorBeamPieceComponent.ceasePullDelayMax) {
+                tractorBeamPieces.remove(tractorBeamPieceComponent);
+                tractorBeamPieceComponent.reset();
+            }
         }
-        tractorBeamPieces.add(piece);
+
     }
 
     private void computeLostPiece(PieceComponent pieceComponent) {
         if(tractorBeamPieces.size == 0) return;
         float distMin = Float.MAX_VALUE;
-        TractorBeamPiece destPiece = null;
+        TractorBeamPieceComponent tractorBeamPieceComponentDest = null;
 
-        for(TractorBeamPiece piece : tractorBeamPieces) {
+        for(TractorBeamPieceComponent tractorBeamPieceComponent : tractorBeamPieces) {
+            TractorBeamPiece piece = tractorBeamPieceComponent.piece;
             float dist = pieceComponent.fixtureCenter.dst2(piece.pieceComponent.fixtureCenter.x, piece.pieceComponent.fixtureCenter.y);
             if(dist < distMin && dist < piece.radius2) {
                 distMin = dist;
-                destPiece = piece;
+                tractorBeamPieceComponentDest = tractorBeamPieceComponent;
             }
         }
-        if(destPiece == null) return;
+        if(tractorBeamPieceComponentDest == null) return;
 
+        Piece destPiece = tractorBeamPieceComponentDest.piece;
         ShapeRenderingDebug.drawDebugLine(pieceComponent.fixtureCenter.x, pieceComponent.fixtureCenter.y, destPiece.pieceComponent.fixtureCenter.x, destPiece.pieceComponent.fixtureCenter.y);
-        float angle = MathUtils.atan2( destPiece.pieceComponent.fixtureCenter.y - pieceComponent.fixtureCenter.y, destPiece.pieceComponent.fixtureCenter.x - pieceComponent.fixtureCenter.x);
 
-        Info.tempVector2 = pieceComponent.fixture.getBody().getLinearVelocity();
-        System.out.println("velocity: " + Info.tempVector2.x + " " + Info.tempVector2.y);
-        if(Math.abs(Info.tempVector2.x) + Math.abs(Info.tempVector2.y) < 1) {
-//            pieceComponent.fixture.getBody().setLinearVelocity(0, 0);
-            pieceComponent.fixture.getBody().applyForceToCenter(MathUtils.cos(angle) * 1, MathUtils.sin(angle) * 1, true);
-        } else {
-            pieceComponent.fixture.getBody().setLinearVelocity(Info.tempVector2.x * .95f, Info.tempVector2.y * .95f);
+        if(tractorBeamPieceComponentDest.state == 1) {
+            Info.tempVector2 = pieceComponent.fixture.getBody().getLinearVelocity();
+            pieceComponent.fixture.getBody().setLinearVelocity(Info.tempVector2.x * .96f, Info.tempVector2.y * .96f);
+        } else if(tractorBeamPieceComponentDest.state == 2) {
+            float angle = MathUtils.atan2( destPiece.pieceComponent.fixtureCenter.y - pieceComponent.fixtureCenter.y, destPiece.pieceComponent.fixtureCenter.x - pieceComponent.fixtureCenter.x);
+            pieceComponent.fixture.getBody().applyForceToCenter(MathUtils.cos(angle) * tractorBeamPieceComponentDest.piece.force, MathUtils.sin(angle) * tractorBeamPieceComponentDest.piece.force, true);
+        } else if(tractorBeamPieceComponentDest.state == 3) {
+            Info.tempVector2 = pieceComponent.fixture.getBody().getLinearVelocity();
+            if(Math.abs(Info.tempVector2.x) + Math.abs(Info.tempVector2.y) < 1) {
+                pieceComponent.fixture.getBody().setLinearVelocity(0, 0);
+            } else {
+                pieceComponent.fixture.getBody().setLinearVelocity(Info.tempVector2.x * .96f, Info.tempVector2.y * .96f);
+            }
         }
     }
 }
