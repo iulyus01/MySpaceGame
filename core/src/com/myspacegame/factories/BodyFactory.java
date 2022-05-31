@@ -5,8 +5,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.myspacegame.Info;
-import com.myspacegame.components.ShipComponent;
-import com.myspacegame.components.TeleporterComponent;
 import com.myspacegame.entities.Piece;
 
 public class BodyFactory {
@@ -30,15 +28,11 @@ public class BodyFactory {
                 fixtureDef.density = Info.defaultPieceDensity;
                 fixtureDef.friction = 0f;
                 fixtureDef.restitution = 0f;
-//                fixtureDef.filter.categoryBits = Info.CATEGORY_PIECE;
-//                fixtureDef.filter.maskBits = Info.MASK_EVERYTHING;
                 break;
             case BULLET:
                 fixtureDef.density = Info.defaultBulletDensity;
                 fixtureDef.friction = 0f;
                 fixtureDef.restitution = 0f;
-//                fixtureDef.filter.categoryBits = Info.CATEGORY_BULLET;
-//                fixtureDef.filter.maskBits = Info.MASK_NOTHING;
                 break;
             case WALL:
                 fixtureDef.density = 10;
@@ -180,27 +174,6 @@ public class BodyFactory {
         return body;
     }
 
-    public Body createWallBody(float x, float y, float width, float height, Entity entity) {
-        BodyDef bodyDef = initBodyDef(Info.EntityType.WALL, false);
-        bodyDef.position.x = x;
-        bodyDef.position.y = y;
-        bodyDef.angle = 0;
-
-        Body body = world.createBody(bodyDef);
-        body.setUserData("body");
-
-        PolygonShape shape = new PolygonShape();
-        shape.setAsBox(width / 2, height / 2);
-
-        FixtureDef fixtureDef = initFixtureDef(Info.EntityType.WALL);
-        fixtureDef.shape = shape;
-        Fixture fixture = body.createFixture(fixtureDef);
-        fixture.setUserData(entity);
-        shape.dispose();
-
-        return body;
-    }
-
     public Fixture createPieceFixture(Body body, Piece piece, Entity entity) {
         float[] vertices = new float[piece.shape.getTransformedVertices().length];
         for(int i = 0; i < piece.shape.getTransformedVertices().length;) {
@@ -226,18 +199,20 @@ public class BodyFactory {
     }
 
     public void removeBody(Body body) {
-        System.out.println(body.getFixtureList().size);
         for(Fixture fixture : body.getFixtureList()) {
             body.destroyFixture(fixture);
         }
         world.destroyBody(body);
     }
 
+    /*
+    this is for checking
+
     // this is used when swimming, you can't swim up if you're outside the water
-    public void makeAllFixturesSensors(Body body) {
+    public void makeAllFixturesSensors(body) {
         for (Fixture fix : body.getFixtureList()) {
             fix.setSensor(true);
         }
     }
-
+    */
 }

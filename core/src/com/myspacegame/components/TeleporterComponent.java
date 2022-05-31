@@ -15,6 +15,5 @@ public class TeleporterComponent implements Component {
     public float activationDistanceMax = Info.blockSize * 100;
     public float activationDistanceMin = Info.blockSize * 10;
     public boolean teleported = false;
-    public boolean isAnimationRunning = false;
 
 }

@@ -19,24 +19,23 @@ public class PlayScreen implements Screen {
     public PlayScreen(MainClass game) {
         PooledEngine engine = new PooledEngine();
         WorldFactory worldFactory = WorldFactory.getInstance(game, engine);
+        worldFactory.createBackgroundOnly();
 
         systemManager = SystemManager.getInstance();
         systemManager.init(game, engine, worldFactory);
 
-        ui = new PlayScreenHUD(game, systemManager.getBatch(), new ShapeRenderer(), systemManager.getCamera());
+        ui = new PlayScreenHUD(game, this, systemManager, new ShapeRenderer());
+
+        worldFactory.setUI(ui);
 
         ShapeRenderingDebug.init(systemManager.getShapeRenderer());
-
-
-//        engine.addSystem(new AnimationSystem());
-//        engine.addSystem(new EnemySystem());
-
 
     }
 
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(systemManager.getKeyboardController());
+        ui.getMultiplexer().addProcessor(systemManager.getKeyboardController());
+//        Gdx.input.setInputProcessor(systemManager.getKeyboardController());
     }
 
     @Override
@@ -75,6 +74,6 @@ public class PlayScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        systemManager.dispose();
     }
 }

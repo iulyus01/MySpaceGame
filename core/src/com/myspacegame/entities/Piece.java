@@ -3,7 +3,6 @@ package com.myspacegame.entities;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.myspacegame.Info;
 import com.myspacegame.components.pieces.PieceComponent;
 import com.myspacegame.utils.PieceEdge;
 
@@ -52,9 +51,6 @@ public class Piece {
 
     public int checked = 0;
 
-
-    public Piece() {
-
-    }
+    public Piece() {}
 
 }

@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.myspacegame.Info;
 import com.myspacegame.components.*;
-import com.myspacegame.components.pieces.CorePieceComponent;
 import com.myspacegame.entities.Area;
 import com.myspacegame.entities.ShipData;
 import com.myspacegame.factories.WorldFactory;
@@ -34,14 +33,12 @@ public class TeleporterSystem extends IteratingSystem {
         super(Family.all(TransformComponent.class).one(TeleporterComponent.class, TeleporterRockComponent.class).get());
         this.engine = engine;
         this.worldFactory = worldFactory;
+        this.playerShip = worldFactory.getPlayerShip();
 
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         bodyMapper = ComponentMapper.getFor(BodyComponent.class);
         teleporterMapper = ComponentMapper.getFor(TeleporterComponent.class);
         teleporterRockMapper = ComponentMapper.getFor(TeleporterRockComponent.class);
-
-        Entity playerEntity = engine.getEntitiesFor(Family.all(PlayerComponent.class, CorePieceComponent.class).get()).first();
-        this.playerShip = playerEntity.getComponent(ShipComponent.class).shipData;
     }
 
     @Override
@@ -147,7 +144,7 @@ public class TeleporterSystem extends IteratingSystem {
                             transformComponent.position.y + y1,
                             transformComponent.position.x + x2,
                             transformComponent.position.y + y2,
-                            Info.blockSize / 2f
+                            Info.blockSize / 4f
                     );
                     x2 = x1;
                     y2 = y1;
@@ -159,7 +156,7 @@ public class TeleporterSystem extends IteratingSystem {
                         transformComponent.position.y + y1,
                         transformComponent.position.x + x2,
                         transformComponent.position.y + y2,
-                        Info.blockSize / 2f
+                        Info.blockSize / 4f
                 );
             }
 
@@ -202,6 +199,10 @@ public class TeleporterSystem extends IteratingSystem {
     }
 
     private void switchArena(Area destArea, TeleporterComponent teleporterComponent) {
+        if(destArea == null) {
+            worldFactory.gameOver(true);
+            return;
+        }
         worldFactory.destroyLevel();
         worldFactory.createLevel(destArea, false);
         int i = 0;

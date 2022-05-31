@@ -6,6 +6,7 @@ import com.myspacegame.Info;
 
 import java.util.*;
 
+@SuppressWarnings("ALL")
 public class ShapeRenderingDebug {
 
     private static ShapeRenderer shapes;
@@ -79,7 +80,7 @@ public class ShapeRenderingDebug {
     public static void drawDebugCircle(float x, float y, float radius) {
         shapes.setColor(Info.colorPurple);
         shapes.begin(ShapeRenderer.ShapeType.Filled);
-        shapes.circle(x, y, radius);
+        shapes.circle(x, y, radius, 10);
         shapes.end();
     }
 

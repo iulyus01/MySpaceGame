@@ -5,7 +5,6 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.ashley.systems.IteratingSystem;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -23,7 +22,6 @@ import com.myspacegame.utils.Functions;
 public class AIControlSystem extends IteratingSystem {
 
     private final ComponentMapper<ShipComponent> shipMapper;
-    private final ComponentMapper<NPCComponent> npcMapper;
     private final ComponentMapper<AIComponent> aiMapper;
     private final PooledEngine engine;
     private final EntitiesFactory entitiesFactory;
@@ -32,17 +30,19 @@ public class AIControlSystem extends IteratingSystem {
 
     private final Array<Info.Pair<ShipData, AIComponent>> ships;
 
-    private ShipData playerShip;
-    private Body playerBody;
-
+    private final ShipData playerShip;
+    private final Body playerBody;
+    private final float randomShootingOffset = 3 * Info.blockSize;
 
     public AIControlSystem(MainClass game, PooledEngine engine) {
         super(Family.all(NPCComponent.class, ShipCoreComponent.class, ShipComponent.class).get());
         this.engine = engine;
-        World world = WorldFactory.getInstance(game, engine).getWorld();
+        WorldFactory worldFactory = WorldFactory.getInstance(game, engine);
+        World world = worldFactory.getWorld();
+        playerBody = worldFactory.getPlayerBody();
+        playerShip = worldFactory.getPlayerShip();
 
         shipMapper = ComponentMapper.getFor(ShipComponent.class);
-        npcMapper = ComponentMapper.getFor(NPCComponent.class);
         aiMapper = ComponentMapper.getFor(AIComponent.class);
 
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
@@ -54,10 +54,6 @@ public class AIControlSystem extends IteratingSystem {
         thrusterForces.add(new Info.Quintuple<>(0f, 0f, 0f, 0f, 0));
 
         ships = new Array<>(false, 16, Info.Pair.class);
-
-        Entity entity = engine.getEntitiesFor(Family.all(ShipCoreComponent.class, PlayerComponent.class, PieceComponent.class).get()).first();
-        playerShip = shipMapper.get(entity).shipData;
-        playerBody = playerShip.core.pieceComponent.fixture.getBody();
     }
 
     @Override
@@ -78,9 +74,12 @@ public class AIControlSystem extends IteratingSystem {
     public void update(float deltaTime) {
         super.update(deltaTime);
 
+//        System.out.println("update begin");
+
         for(Info.Pair<ShipData, AIComponent> pair : ships) {
             ShipData shipData = pair.first;
             AIComponent aiComponent = pair.second;
+//            System.out.println("update ship");
 
             Body shipBody = shipData.core.pieceComponent.fixture.getBody();
             float angleDiffRad = computeShipAutoRotation(aiComponent, shipBody);
@@ -93,15 +92,21 @@ public class AIControlSystem extends IteratingSystem {
                 }
             }
 
-            applyForces(shipBody, aiComponent);
+//            System.out.println("apply forces begin");
+
+            applyForces(shipBody);
             float velX = shipBody.getLinearVelocity().x;
             float velY = shipBody.getLinearVelocity().y;
             velX = Math.signum(velX) * Math.min(Math.abs(velX), Info.maxHorVerVelocity);
             velY = Math.signum(velY) * Math.min(Math.abs(velY), Info.maxHorVerVelocity);
             shipBody.setLinearVelocity(velX, velY);
+
+//            System.out.println("apply forces end");
         }
         ships.clear();
 
+//        System.out.println("update end");
+//        System.out.println();
     }
 
     private void updateMovement(AIComponent aiComponent, ShipComponent shipComponent, float deltaTime) {
@@ -129,10 +134,9 @@ public class AIControlSystem extends IteratingSystem {
         if(shipComponent.shipData.core.pieceComponent.fixture.getBody().getPosition().dst2(playerBody.getPosition()) < 900) {
             if(playerShip.piecesArray.size > 0) {
                 int index = MathUtils.random(0, playerShip.piecesArray.size - 1);
-                aiComponent.shotTargetX = playerShip.piecesArray.get(index).pieceComponent.fixtureCenter.x;
-                aiComponent.shotTargetY = playerShip.piecesArray.get(index).pieceComponent.fixtureCenter.y;
+                aiComponent.shotTargetX = playerShip.piecesArray.get(index).pieceComponent.fixtureCenter.x + MathUtils.random(-randomShootingOffset, randomShootingOffset);
+                aiComponent.shotTargetY = playerShip.piecesArray.get(index).pieceComponent.fixtureCenter.y + MathUtils.random(-randomShootingOffset, randomShootingOffset);
             } else {
-
                 aiComponent.shotTargetX = playerBody.getPosition().x;
                 aiComponent.shotTargetY = playerBody.getPosition().y;
             }
@@ -174,6 +178,7 @@ public class AIControlSystem extends IteratingSystem {
     }
 
     private void handleThruster(AIComponent aiComponent, PieceComponent pieceComponent, Body shipBody, float angleDiffRad) {
+//        System.out.println("handle thruster begin");
         ThrusterPiece piece = (ThrusterPiece) pieceComponent.piece;
 
         float computedLinearImpulse = Info.defaultThrusterForce;
@@ -230,9 +235,11 @@ public class AIControlSystem extends IteratingSystem {
             q.set(impulseX, impulseY, pointX, pointY, nr + 1);
         }
 
+//        System.out.println("handle thruster end");
     }
 
     private void handleWeapon(AIComponent aiComponent, PieceComponent pieceComponent, float deltaTime) {
+//        System.out.println("handle weapon begin");
         WeaponPiece piece = (WeaponPiece) pieceComponent.piece;
 
         // weapon angle, oriented to mouse
@@ -261,42 +268,19 @@ public class AIControlSystem extends IteratingSystem {
 
             }
         }
+//        System.out.println("handle thruster end");
     }
 
-    private void applyForces(Body shipBody, AIComponent aiComponent) {
-//        int keysPressed = aiComponent.forward ? 1 : 0;
-//        if(keysPressed == 0) {
-//            boolean firstIsSmaller = Math.abs(thrusterForces.get(0).first) + Math.abs(thrusterForces.get(0).second) < Math.abs(thrusterForces.get(2).first) + Math.abs(thrusterForces.get(2).second);
-//            if(Math.signum(thrusterForces.get(0).first) != Math.signum(thrusterForces.get(2).first)) {
-//                if(firstIsSmaller) thrusterForces.get(2).first = -thrusterForces.get(0).first;
-//                else thrusterForces.get(0).first = -thrusterForces.get(2).first;
-//            } else {
-//                if(firstIsSmaller) thrusterForces.get(2).first = thrusterForces.get(0).first;
-//                else thrusterForces.get(0).first = thrusterForces.get(2).first;
-//            }
-//
-//            firstIsSmaller = Math.abs(thrusterForces.get(1).first) + Math.abs(thrusterForces.get(1).second) < Math.abs(thrusterForces.get(3).first) + Math.abs(thrusterForces.get(3).second);
-//            if(Math.signum(thrusterForces.get(1).first) != Math.signum(thrusterForces.get(3).first)) {
-//                if(firstIsSmaller) thrusterForces.get(3).first = -thrusterForces.get(1).first;
-//                else thrusterForces.get(1).first = -thrusterForces.get(3).first;
-//            } else {
-//                if(firstIsSmaller) thrusterForces.get(3).first = thrusterForces.get(1).first;
-//                else thrusterForces.get(1).first = thrusterForces.get(3).first;
-//            }
-//
-//        }
+    private void applyForces(Body shipBody) {
         for(int i = 0; i < thrusterForces.size; i++) {
             if(thrusterForces.get(i).fifth == 0) continue;
             shipBody.applyForce(
-//            playerBody.applyLinearImpulse(
                     thrusterForces.get(i).first,
                     thrusterForces.get(i).second,
                     thrusterForces.get(i).third,
                     thrusterForces.get(i).forth,
                     true
             );
-
-//            ShapeRenderingDebug.drawDebugCircle(thrusterForces.get(i).third, thrusterForces.get(i).forth, .5f);
 
             thrusterForces.get(i).set(0f, 0f, 0f, 0f, 0);
             // TODO set speed limit, use normalization (.nor())

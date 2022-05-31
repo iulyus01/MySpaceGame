@@ -4,10 +4,8 @@ import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.SortedIteratingSystem;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
-import com.myspacegame.Info;
 import com.myspacegame.components.ShapeDrawingComponent;
 import com.myspacegame.components.TransformComponent;
 
@@ -28,8 +26,6 @@ public class ShapesRenderingSystem extends SortedIteratingSystem {
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
 
         drawingList = new Array<>(true, 16, Entity.class);
-
-//        Gdx.gl.glLineWidth(2);
     }
 
     @Override

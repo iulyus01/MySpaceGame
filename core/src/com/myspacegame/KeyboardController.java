@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.IntIntMap;
 public class KeyboardController implements InputProcessor {
 
     public boolean bPressed = false;
+    public boolean escPressed = false;
 
     public boolean mouseLeft;
     public boolean mouseRight;
@@ -47,6 +48,9 @@ public class KeyboardController implements InputProcessor {
             case Keys.B:
                 bPressed = true;
                 keyPressed = true;
+                break;
+            case Keys.ESCAPE:
+                escPressed = true;
                 break;
         }
         return keyPressed;
@@ -118,8 +122,8 @@ public class KeyboardController implements InputProcessor {
         else camera.zoom = camera.zoom * .92f;
 
         // TODO uncomment
-//        if(camera.zoom > 5) camera.zoom = 5;
-        if(camera.zoom < .1f) camera.zoom = .1f;
+        if(camera.zoom > 1.6) camera.zoom = 1.6f;
+        if(camera.zoom < .3f) camera.zoom = .3f;
 
         camera.update();
         System.out.println(camera.zoom + " " + camera.viewportWidth + " " + camera.viewportHeight);

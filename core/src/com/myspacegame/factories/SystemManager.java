@@ -14,6 +14,7 @@ import com.myspacegame.systems.*;
 public class SystemManager {
 
 
+    private MainClass game;
     private static SystemManager instance = null;
     private PooledEngine engine;
     private final KeyboardController keyboardController;
@@ -21,6 +22,7 @@ public class SystemManager {
     private final SpriteBatch batch;
     private final ShapeRenderer shapeRenderer;
     private final OrthographicCamera camera;
+    private WorldFactory worldFactory;
 
     private final RenderingBeginSystem renderingBeginSystem;
     private AnchorSystem anchorSystem;
@@ -31,7 +33,7 @@ public class SystemManager {
     private SystemManager() {
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
-        renderingBeginSystem = new RenderingBeginSystem(batch, shapeRenderer);
+        renderingBeginSystem = new RenderingBeginSystem(batch);
         camera = renderingBeginSystem.getCamera();
         keyboardController = new KeyboardController(camera);
 
@@ -44,9 +46,11 @@ public class SystemManager {
     }
 
     public void init(MainClass game, PooledEngine engine, WorldFactory worldFactory) {
+        this.game = game;
         this.engine = engine;
         this.anchorSystem = new AnchorSystem();
-        this.buildingSystem = new BuildingSystem(keyboardController, game, engine);
+        this.worldFactory = worldFactory;
+
 
         // physics system has to be before others, that's where the fixture center is computed
         engine.addSystem(new PhysicsSystem(worldFactory.getWorld()));
@@ -57,25 +61,38 @@ public class SystemManager {
 //        engine.addSystem(new RenderingBackgroundSystem(batch, shapeRenderer));
         engine.addSystem(new RenderingSystem(batch));
         engine.addSystem(new RenderingRotatingSystem(batch));
-        engine.addSystem(new RenderingEndSystem(batch, shapeRenderer));
+        engine.addSystem(new RenderingEndSystem(batch));
         engine.addSystem(new ShapesRenderingSystem(shapeRenderer));
 
-
         engine.addSystem(new DraggingSystem(worldFactory.getWorld()));
-        engine.addSystem(new PlayerControlSystem(keyboardController, game, engine, camera));
         engine.addSystem(new BulletSystem(game, engine));
         engine.addSystem(new RockSystem());
-        engine.addSystem(new TeleporterSystem(engine, worldFactory));
-        engine.addSystem(new ShipSystem());
         engine.addSystem(new BackgroundSystem(camera));
         engine.addSystem(new CollisionSystem());
 
-        engine.addSystem(new EnemyGenerationSystem(game, engine));
+
+
+//        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
+
+    }
+
+    public void resetGame() {
+        worldFactory.destroyLevel();
+        worldFactory.destroyPlayer();
+        worldFactory.createBackgroundOnly();
+
+        engine.removeSystem(engine.getSystem(BuildingSystem.class));
+        engine.removeSystem(engine.getSystem(PlayerControlSystem.class));
+        engine.removeSystem(engine.getSystem(TeleporterSystem.class));
+        engine.removeSystem(engine.getSystem(AIControlSystem.class));
+    }
+
+    public void startGame() {
+        worldFactory.startGame();
+        this.buildingSystem = new BuildingSystem(keyboardController, game, engine);
+        engine.addSystem(new PlayerControlSystem(keyboardController, game, engine, camera, worldFactory.getPlayerBody()));
+        engine.addSystem(new TeleporterSystem(engine, worldFactory));
         engine.addSystem(new AIControlSystem(game, engine));
-
-
-        engine.addSystem(new PhysicsDebugSystem(worldFactory.getWorld(), camera));
-
     }
 
     public void toggleBuilding(boolean active) {
@@ -101,12 +118,17 @@ public class SystemManager {
         engine.update(delta);
     }
 
-    public KeyboardController getKeyboardController() {
-        return keyboardController;
+    public void dispose() {
+        engine.removeAllEntities();
+        engine.removeAllSystems();
+        engine.clearPools();
+        batch.dispose();
+        shapeRenderer.dispose();
+        worldFactory.dispose();
     }
 
-    public OrthographicCamera getCamera() {
-        return camera;
+    public KeyboardController getKeyboardController() {
+        return keyboardController;
     }
 
     public SpriteBatch getBatch() {

@@ -11,14 +11,16 @@ public class PieceComponent implements Component, Pool.Poolable {
     public Piece piece;
     public Fixture fixture;
     public Vector2 fixtureCenter = new Vector2();
-    public Vector2 fixtureBottomLeft = new Vector2();
     public boolean isDead = false;
     public boolean isManuallyDetached = false;
     public boolean toRemoveAnchors = false;
 
     @Override
     public void reset() {
+        piece = null;
         isDead = false;
+        isManuallyDetached = false;
+        toRemoveAnchors = false;
     }
 
 }

@@ -33,7 +33,7 @@ public class BuildingSystem extends IteratingSystem {
     private final World world;
 
     private final ShipData playerShip;
-    private final Body playerShipBody;
+    private final Body playerBody;
 
     private boolean isDraggingPiece = false;
     private boolean isDraggingPieceBegin = false;
@@ -49,6 +49,11 @@ public class BuildingSystem extends IteratingSystem {
     public BuildingSystem(KeyboardController keyboardController, MainClass game, PooledEngine engine) {
         super(Family.one(PieceComponent.class).exclude(NPCComponent.class).get());
         this.engine = engine;
+
+        WorldFactory worldFactory = WorldFactory.getInstance(game, engine);
+        playerBody = worldFactory.getPlayerBody();
+        playerShip = worldFactory.getPlayerShip();
+
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         textureMapper = ComponentMapper.getFor(TextureComponent.class);
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
@@ -61,9 +66,6 @@ public class BuildingSystem extends IteratingSystem {
 
         toAttachAnchors = new Array<>(false, 20, Info.Pair.class);
 
-        Entity playerEntity = engine.getEntitiesFor(Family.all(PlayerComponent.class, ShipComponent.class, PieceComponent.class).get()).first();
-        playerShip = shipMapper.get(playerEntity).shipData;
-        playerShipBody = pieceMapper.get(playerEntity).fixture.getBody();
 
     }
 
@@ -134,7 +136,7 @@ public class BuildingSystem extends IteratingSystem {
 
     private void draggingPieceBegin() {
         DraggingComponent draggingComponent = engine.createComponent(DraggingComponent.class);
-        draggingComponent.playerShipAngleRad = playerShipBody.getAngle();
+        draggingComponent.playerShipAngleRad = playerBody.getAngle();
         draggingComponent.isBeforeFirstUpdate = true;
         draggingEntity.add(draggingComponent);
         draggingFixtureMask = draggedFixture.getFilterData().maskBits;
@@ -206,7 +208,7 @@ public class BuildingSystem extends IteratingSystem {
 
             buildingAdjustAttachAnchors(playerShip, pieceComponent, toAttachAnchors);
             if(toAttachAnchors.size > 0) {
-                buildingAttachPiece(draggingEntity, playerShip, playerShipBody, pieceComponent, toAttachAnchors);
+                buildingAttachPiece(draggingEntity, playerShip, playerBody, pieceComponent, toAttachAnchors);
             }
         }
 

@@ -1,7 +1,5 @@
 package com.myspacegame.utils;
 
-import com.badlogic.gdx.math.MathUtils;
-
 public class Functions {
 
     public static float rotatingThrustersFunction(float x) {

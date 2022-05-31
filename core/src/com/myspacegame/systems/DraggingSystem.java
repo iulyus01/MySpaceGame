@@ -1,11 +1,9 @@
 package com.myspacegame.systems;
 
-import com.badlogic.ashley.core.Component;
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Fixture;
@@ -15,8 +13,6 @@ import com.myspacegame.components.DraggingComponent;
 import com.myspacegame.components.TransformComponent;
 import com.myspacegame.components.pieces.PieceComponent;
 import com.myspacegame.factories.BodyFactory;
-
-import java.util.Arrays;
 
 public class DraggingSystem extends IteratingSystem {
 

@@ -16,7 +16,6 @@ import com.myspacegame.factories.ShapeRenderingDebug;
 public class BackgroundSystem extends IteratingSystem {
 
     private final ComponentMapper<TransformComponent> transformMapper;
-    private final ComponentMapper<BackgroundComponent> backgroundMapper;
     private final ComponentMapper<TextureComponent> textureMapper;
     private final ComponentMapper<BackgroundBigDotComponent> bigDotMapper;
     private final ComponentMapper<BackgroundSmallDotComponent> smallDotMapper;
@@ -27,7 +26,6 @@ public class BackgroundSystem extends IteratingSystem {
         this.camera = camera;
 
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
-        backgroundMapper = ComponentMapper.getFor(BackgroundComponent.class);
         textureMapper = ComponentMapper.getFor(TextureComponent.class);
         bigDotMapper = ComponentMapper.getFor(BackgroundBigDotComponent.class);
         smallDotMapper = ComponentMapper.getFor(BackgroundSmallDotComponent.class);
@@ -44,12 +42,11 @@ public class BackgroundSystem extends IteratingSystem {
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         TransformComponent transformComponent = transformMapper.get(entity);
-        BackgroundComponent backgroundComponent = backgroundMapper.get(entity);
         TextureComponent textureComponent = textureMapper.get(entity);
         if(transformComponent == null) return;
         if(bigDotMapper.has(entity)) {
             // big dot
-            processBigDot(entity, transformComponent, backgroundComponent, textureComponent);
+            processBigDot(entity, transformComponent, textureComponent);
         } else if(smallDotMapper.has(entity)) {
             // small dot
             processSmallDot(transformComponent);
@@ -57,7 +54,7 @@ public class BackgroundSystem extends IteratingSystem {
 
     }
 
-    private void processBigDot(Entity entity, TransformComponent transformComponent, BackgroundComponent backgroundComponent, TextureComponent textureComponent) {
+    private void processBigDot(Entity entity, TransformComponent transformComponent, TextureComponent textureComponent) {
         BackgroundBigDotComponent bigDotComponent = entity.getComponent(BackgroundBigDotComponent.class);
 
         // crop y should be reversed, dunno why, textureRegion's fault
@@ -82,8 +79,6 @@ public class BackgroundSystem extends IteratingSystem {
 
 
         textureComponent.textureRegion.setRegion((int) srcX, (int) srcY, (int) srcWidth, (int) srcHeight);
-//        textureComponent.textureRegion.setRegion(500, 500, 500, 500);
-//        System.out.println("crop: " + srcX + " " + srcY + " " + srcWidth + " " + srcHeight);
     }
 
     private void processSmallDot(TransformComponent transform) {

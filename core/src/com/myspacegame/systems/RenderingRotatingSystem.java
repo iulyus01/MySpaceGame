@@ -9,7 +9,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.myspacegame.components.TextureRotatingComponent;
 import com.myspacegame.components.TransformComponent;
 import com.myspacegame.components.pieces.PieceComponent;
-import com.myspacegame.components.pieces.WeaponPieceComponent;
 import com.myspacegame.entities.Piece;
 import com.myspacegame.entities.WeaponPiece;
 

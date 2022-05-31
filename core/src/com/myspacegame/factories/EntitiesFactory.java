@@ -1,7 +1,6 @@
 package com.myspacegame.factories;
 
 import com.badlogic.ashley.core.*;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -69,29 +68,10 @@ public class EntitiesFactory {
         return entities;
     }
 
-    public Entity createWall(float x, float y, float width, float height) {
-        Entity entity = engine.createEntity();
-        TextureComponent textureComponent = createTextureComponent("badlogic.jpg");
-        TransformComponent transformComponent = createTransformComponent(width, height, 0, 0, textureComponent, Info.ZOrder.WALL);
-        transformComponent.position.x = x;
-        transformComponent.position.y = y;
-        Body body = bodyFactory.createWallBody(x, y, width, height, entity);
-        BodyComponent bodyComponent = createBodyComponent(body);
-        CollisionComponent collisionComponent = createCollisionComponent();
-
-        entity.add(bodyComponent);
-        entity.add(textureComponent);
-        entity.add(transformComponent);
-        entity.add(collisionComponent);
-        entity.add(engine.createComponent(WallComponent.class));
-
-        return entity;
-    }
-
     public Entity createPieceEntity(Class<? extends Component> componentType, boolean random, float bodyX, float bodyY) {
         if(random) {
-            bodyX = (float) Math.random() * 60 - 30;
-            bodyY = (float) Math.random() * 60 - 30;
+            bodyX = MathUtils.random(-Info.worldWidthLimit, Info.worldWidthLimit);
+            bodyY = MathUtils.random(-Info.worldHeightLimit, Info.worldHeightLimit);
         }
 
         Entity entity = engine.createEntity();
@@ -117,12 +97,19 @@ public class EntitiesFactory {
             piece.pieceConfigId = 3;
 
             angleOrientationRad = rotation * Info.rad90Deg;
+        } else if(componentType == TractorBeamPieceComponent.class) {
+            rotation = MathUtils.random(0, 3);
+            piece = new TractorBeamPiece(Info.defaultTractorBeamRadius);
+            specificPieceComponent = createTractorBeamPieceComponent((TractorBeamPiece) piece);
+            piece.pieceConfigId = 5;
+
+            angleOrientationRad = rotation * Info.rad90Deg;
         } else {
             piece = new HullPiece();
             specificPieceComponent = createHullPieceComponent((HullPiece) piece);
-            int rand = MathUtils.random(1, 3);
-            if(rand == 2) rand = 6;
-            else if(rand == 3) rand = 7;
+            int rand = MathUtils.random(1, 4);
+            if(rand == 3) rand = 6;
+            else if(rand == 4) rand = 7;
             piece.pieceConfigId = rand;
         }
         piece.actorId = Info.StaticActorIds.NONE.getValue();
@@ -271,9 +258,11 @@ public class EntitiesFactory {
 
     public Entity createTeleporterEntity(Area currentArea, Area destArea, Vector2 pos) {
         Entity entity = engine.createEntity();
+
         TextureComponent textureComponent = createTextureComponent("images/Teleporter.png");
 
-        float radius = Info.baseTeleporterRadius + destArea.difficulty * Info.blockSize;
+        int difficulty = destArea == null ? 10 : destArea.difficulty;
+        float radius = Info.baseTeleporterRadius + difficulty * Info.blockSize;
         TransformComponent transformComponent = createTransformComponent(radius * 2, radius * 2, 0, 0, textureComponent, Info.ZOrder.TELEPORTER);
         TeleporterComponent teleporterComponent = createTeleporterComponent(currentArea, destArea, radius * radius);
 
@@ -321,6 +310,44 @@ public class EntitiesFactory {
         return entity;
     }
 
+    public Entity createWinningEntity() {
+        Entity entity = engine.createEntity();
+
+        TextureComponent textureComponent = createTextureComponent("images/GameOverWin.png");
+
+        float width = Info.worldWidthLimit / 2;
+        float height = textureComponent.textureRegion.getRegionHeight() / (float) textureComponent.textureRegion.getRegionWidth() * width;
+
+        TransformComponent transformComponent = createTransformComponent(width, height, 0, 0, textureComponent, Info.ZOrder.GAME_OVER);
+        transformComponent.position.x = Info.cameraWorldX;
+        transformComponent.position.y = Info.cameraWorldY;
+
+        entity.add(engine.createComponent(GameOverComponent.class));
+        entity.add(textureComponent);
+        entity.add(transformComponent);
+
+        return entity;
+    }
+
+    public Entity createLoosingEntity() {
+        Entity entity = engine.createEntity();
+
+        TextureComponent textureComponent = createTextureComponent("images/GameOverLost.png");
+
+        float width = Info.worldWidthLimit / 2;
+        float height = textureComponent.textureRegion.getRegionHeight() / (float) textureComponent.textureRegion.getRegionWidth() * width;
+
+        TransformComponent transformComponent = createTransformComponent(width, height, 0, 0, textureComponent, Info.ZOrder.GAME_OVER);
+        transformComponent.position.x = Info.cameraWorldX;
+        transformComponent.position.y = Info.cameraWorldY;
+
+        entity.add(engine.createComponent(GameOverComponent.class));
+        entity.add(textureComponent);
+        entity.add(transformComponent);
+
+        return entity;
+    }
+
     public void removePieceHoverEntity(Entity entity) {
         engine.removeEntity(entity);
     }
@@ -348,6 +375,7 @@ public class EntitiesFactory {
         Family family = Family.one(PieceComponent.class).exclude(ShipComponent.class).get();
         for(Entity entity : engine.getEntitiesFor(family)) {
             PieceComponent pieceComponent = pieceMapper.get(entity);
+            pieceComponent.isDead = true;
             bodyFactory.removeBody(pieceComponent.fixture.getBody());
         }
         engine.removeAllEntities(family);
@@ -355,9 +383,8 @@ public class EntitiesFactory {
         family = Family.one(AnchorComponent.class).get();
         for(Entity entity : engine.getEntitiesFor(family)) {
             AnchorComponent anchorComponent = anchorMapper.get(entity);
-            if(anchorComponent.piece.pieceComponent == null) {
-                System.out.println("NULLLLLLl");
-                // TODO something's wrong with tping and finish this ^^
+            if(anchorComponent.piece.pieceComponent.isDead) {
+                engine.removeEntity(entity);
             }
         }
     }
@@ -371,6 +398,50 @@ public class EntitiesFactory {
         }
 
         family = Family.all(NPCComponent.class, ShipComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            PieceComponent pieceComponent = pieceMapper.get(entity);
+            pieceComponent.isDead = true;
+        }
+        engine.removeAllEntities(family);
+
+        family = Family.one(AnchorComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            AnchorComponent anchorComponent = anchorMapper.get(entity);
+            if(anchorComponent.piece.pieceComponent.isDead) {
+                engine.removeEntity(entity);
+            }
+        }
+    }
+
+    public void removePlayer() {
+        Family family = Family.all(PlayerComponent.class, ShipCoreComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            ShipData shipData = shipMapper.get(entity).shipData;
+            shipData.piecesArray.clear();
+            bodyFactory.removeBody(shipData.core.pieceComponent.fixture.getBody());
+        }
+
+        family = Family.all(PlayerComponent.class, ShipComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            PieceComponent pieceComponent = pieceMapper.get(entity);
+            pieceComponent.isDead = true;
+        }
+        engine.removeAllEntities(family);
+
+        family = Family.one(AnchorComponent.class).get();
+        for(Entity entity : engine.getEntitiesFor(family)) {
+            AnchorComponent anchorComponent = anchorMapper.get(entity);
+            if(anchorComponent.piece.pieceComponent.isDead) {
+                engine.removeEntity(entity);
+            }
+        }
+
+        family = Family.one(ShapeDrawingComponent.class).get();
+        engine.removeAllEntities(family);
+    }
+
+    public void removeGameOverStuff() {
+        Family family = Family.one(GameOverComponent.class).get();
         engine.removeAllEntities(family);
     }
 
@@ -429,8 +500,6 @@ public class EntitiesFactory {
             toAddPiece.shape = new Polygon(Info.edgesToNewVerticesArray(Info.pieceConfigsMap.get(pieceConfigId).edges, Info.blockSize));
             toAddPiece.edges = Info.configEdgesToComputedEdges(Info.pieceConfigsMap.get(pieceConfigId).edges, Info.blockSize);
 
-            // if pieceIndex is higher than piecesNr it will crash
-            // TODO not sure if i have to treat this case ^^
             shipData.piecesArray.set(pieceIndex, toAddPiece);
         }
 
@@ -533,6 +602,7 @@ public class EntitiesFactory {
         return textureComponent;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private TextureRotatingComponent createTextureRotatingComponent(String image, float originX, float originY) {
         TextureRotatingComponent rotatingComponent = engine.createComponent(TextureRotatingComponent.class);
         rotatingComponent.textureRegion = new TextureRegion(game.assetManager.get(image, Texture.class));

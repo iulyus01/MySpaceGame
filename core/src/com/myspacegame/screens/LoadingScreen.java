@@ -37,11 +37,7 @@ public class LoadingScreen implements Screen {
     private final ShapeRenderer shapeRenderer;
 
     private float dotDelay;
-    private final float dotDelayMax = .2f;
     private float dotNr = 0;
-    private final float dotNrMax = 5;
-    private float loadingDelay;
-    private final float loadingDelayMax = 1000;
 
     public LoadingScreen(MainClass game) {
         this.game = game;
@@ -68,10 +64,11 @@ public class LoadingScreen implements Screen {
         }
 
         dotDelay += delta;
-        loadingDelay += delta * 1000;
+        float dotDelayMax = .2f;
         if(dotDelay >= dotDelayMax) {
             dotDelay = 0;
             dotNr++;
+            float dotNrMax = 5;
             dotNr %= (dotNrMax + 1);
         }
     }
@@ -123,15 +120,8 @@ public class LoadingScreen implements Screen {
 
     private void queueAssets() {
         game.assetManager.load("ui/FlatSkin.json", Skin.class);
-        game.assetManager.load("ui/FlatSkinReversed.json", Skin.class);
 
         game.assetManager.load("badlogic.jpg", Texture.class);
-        game.assetManager.load("images/background/background.png", Texture.class);
-        game.assetManager.load("images/background/BackgroundDot1.png", Texture.class);
-        game.assetManager.load("images/background/BackgroundDot12.png", Texture.class);
-        game.assetManager.load("images/background/BackgroundDot2.png", Texture.class);
-        game.assetManager.load("images/background/BackgroundDot3.png", Texture.class);
-        game.assetManager.load("images/background/BackgroundDot4.png", Texture.class);
         game.assetManager.load("images/background/SmallDot1.png", Texture.class);
         game.assetManager.load("images/background/SmallDot2.png", Texture.class);
         game.assetManager.load("images/background/SmallDot3.png", Texture.class);
@@ -160,6 +150,26 @@ public class LoadingScreen implements Screen {
         game.assetManager.load("images/TeleporterRock2.png", Texture.class);
         game.assetManager.load("images/TeleporterRock3.png", Texture.class);
         game.assetManager.load("images/TeleporterRock4.png", Texture.class);
+        game.assetManager.load("images/numbers/0.png", Texture.class);
+        game.assetManager.load("images/numbers/1.png", Texture.class);
+        game.assetManager.load("images/numbers/2.png", Texture.class);
+        game.assetManager.load("images/numbers/3.png", Texture.class);
+        game.assetManager.load("images/numbers/4.png", Texture.class);
+        game.assetManager.load("images/numbers/5.png", Texture.class);
+        game.assetManager.load("images/numbers/6.png", Texture.class);
+        game.assetManager.load("images/numbers/7.png", Texture.class);
+        game.assetManager.load("images/numbers/8.png", Texture.class);
+        game.assetManager.load("images/numbers/9.png", Texture.class);
+        game.assetManager.load("images/numbers/10.png", Texture.class);
+        game.assetManager.load("images/numbers/11.png", Texture.class);
+        game.assetManager.load("images/numbers/12.png", Texture.class);
+        game.assetManager.load("images/numbers/13.png", Texture.class);
+        game.assetManager.load("images/numbers/14.png", Texture.class);
+        game.assetManager.load("images/numbers/15.png", Texture.class);
+        game.assetManager.load("images/numbers/16.png", Texture.class);
+        game.assetManager.load("images/numbers/17.png", Texture.class);
+        game.assetManager.load("images/GameOverWin.png", Texture.class);
+        game.assetManager.load("images/GameOverLost.png", Texture.class);
 
 //        game.assetManager.load("ui/GoUpButton.png", Texture.class);
 //        game.assetManager.load("ui/GoUpButtonOver.png", Texture.class);

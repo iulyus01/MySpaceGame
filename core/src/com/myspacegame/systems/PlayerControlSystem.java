@@ -42,10 +42,11 @@ public class PlayerControlSystem extends IteratingSystem {
 
     private final Array<Info.Quintuple<Float, Float, Float, Float, Integer>> thrusterForces;
 
-    public PlayerControlSystem(KeyboardController keyboardController, MainClass game, PooledEngine engine, OrthographicCamera camera) {
+    public PlayerControlSystem(KeyboardController keyboardController, MainClass game, PooledEngine engine, OrthographicCamera camera, Body playerBody) {
         super(Family.all(PlayerComponent.class).one(ThrusterPieceComponent.class, WeaponPieceComponent.class, TractorBeamPieceComponent.class).get());
         this.engine = engine;
         this.camera = camera;
+        this.playerBody = playerBody;
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         thrusterPieceMapper = ComponentMapper.getFor(ThrusterPieceComponent.class);
@@ -55,8 +56,6 @@ public class PlayerControlSystem extends IteratingSystem {
 
         World world = WorldFactory.getInstance(game, engine).getWorld();
         entitiesFactory = EntitiesFactory.getInstance(game, engine, world);
-        Entity entity = engine.getEntitiesFor(Family.all(ShipCoreComponent.class, PlayerComponent.class, PieceComponent.class).get()).first();
-        playerBody = pieceMapper.get(entity).fixture.getBody();
 
         thrusterForces = new Array<>(true, 4, Info.Quintuple.class);
         thrusterForces.add(new Info.Quintuple<>(0f, 0f, 0f, 0f, 0));

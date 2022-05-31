@@ -3,9 +3,6 @@ package com.myspacegame.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL30;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -20,14 +17,12 @@ public class MainMenuScreen implements Screen {
 
 //    private final DynamicBackground background;
     private final Stage stage;
-//    private final ShapeRenderer shapeRenderer;
 
     public MainMenuScreen(MainClass game) {
         this.game = game;
 
 //        background = new DynamicBackground(14, .8f);
         stage = new Stage();
-//        shapeRenderer = new ShapeRenderer();
 
         Gdx.input.setInputProcessor(stage);
     }
@@ -37,16 +32,25 @@ public class MainMenuScreen implements Screen {
 
         Label titleLabel = new Label(Info.appName, game.uiStyles.getTitleLabelStyle());
 
-        TextButton randomButton = new TextButton("Random", game.uiStyles.getTextButtonStyle());
-        TextButton advancedButton = new TextButton("Play", game.uiStyles.getTextButtonStyle());
-        advancedButton.addListener(new ClickListener() {
+        TextButton playButton = new TextButton("play", game.uiStyles.getTextButtonStyle());
+        playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
+                Info.speedrun = false;
                 game.setScreen(new PlayScreen(game));
             }
         });
-        TextButton exitButton = new TextButton("Exit", game.uiStyles.getTextButtonStyle());
+        TextButton playSpeedrunButton = new TextButton("play speedrun", game.uiStyles.getTextButtonStyle());
+        playSpeedrunButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                super.clicked(event, x, y);
+                Info.speedrun = true;
+                game.setScreen(new PlayScreen(game));
+            }
+        });
+        TextButton exitButton = new TextButton("exit", game.uiStyles.getTextButtonStyle());
         exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -59,8 +63,8 @@ public class MainMenuScreen implements Screen {
         Table table = new Table();
         table.setFillParent(true);
         table.add(titleLabel).padBottom(180).row();
-        table.add(randomButton).padBottom(20).row();
-        table.add(advancedButton).padBottom(20).row();
+        table.add(playButton).padBottom(20).row();
+        table.add(playSpeedrunButton).padBottom(20).row();
         table.add(exitButton).padBottom(200);
 
         stage.addActor(table);
@@ -75,7 +79,7 @@ public class MainMenuScreen implements Screen {
     @Override
     public void render(float delta) {
         Gdx.gl.glEnable(GL30.GL_BLEND);
-        ScreenUtils.clear(Info.colorBlueLighten5);
+        ScreenUtils.clear(Info.colorClear);
 
         update(delta);
 

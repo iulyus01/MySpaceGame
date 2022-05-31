@@ -15,8 +15,8 @@ public class AIComponent implements Component {
     public float shotTargetX;
     public float shotTargetY;
     public float shootingDelay = 0;
-    public float shootingDelayMax = .0f;
+    public float shootingDelayMax = .15f;
     public float notShootingDelay = 0;
-    public float notShootingDelayMax = 10.5f;
+    public float notShootingDelayMax = 1.35f;
     public boolean shooting = false;
 }

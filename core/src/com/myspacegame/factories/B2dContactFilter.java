@@ -34,10 +34,6 @@ public class B2dContactFilter implements ContactFilter {
         if(pieceMapper.has(entity)) {
             // if bullet is created by same actor as piece, it won't collide
             return bulletComponent.createdByActorId != pieceMapper.get(entity).piece.actorId;
-        } else if(bulletMapper.has(entity)) {
-            return false;
-        }
-
-        return true;
+        } else return !bulletMapper.has(entity);
     }
 }

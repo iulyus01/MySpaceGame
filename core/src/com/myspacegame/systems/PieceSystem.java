@@ -24,6 +24,7 @@ import com.myspacegame.factories.WorldFactory;
 public class PieceSystem extends IteratingSystem {
 
     private final PooledEngine engine;
+    private final WorldFactory worldFactory;
 
     private final ComponentMapper<PieceComponent> pieceMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
@@ -37,7 +38,8 @@ public class PieceSystem extends IteratingSystem {
     public PieceSystem(MainClass game, PooledEngine engine) {
         super(Family.all(PieceComponent.class, TransformComponent.class).get());
         this.engine = engine;
-        World world = WorldFactory.getInstance(game, engine).getWorld();
+        this.worldFactory = WorldFactory.getInstance(game, engine);
+        World world = this.worldFactory.getWorld();
         this.bodyFactory = BodyFactory.getInstance(world);
 
         pieceMapper = ComponentMapper.getFor(PieceComponent.class);
@@ -66,11 +68,13 @@ public class PieceSystem extends IteratingSystem {
         transformComponent.position.y = pieceComponent.fixtureCenter.y;
 
         if(pieceComponent.isDead) {
-//            if(pieceComponent.piece instanceof CorePiece) {
+            if(pieceComponent.piece instanceof CorePiece && entity.getComponent(PlayerComponent.class) != null) {
+                this.worldFactory.gameOver(false);
+                Info.playerIsDead = true;
             // TODO this is a little broken rn
 //                detachShip(pieceComponent, entity);
 //                return;
-//            }
+            }
             detachPiece(pieceComponent.piece, entity, false);
             // isDead will be reset when entity is removed (component pooling)
             removeAnchorEntities(pieceComponent.piece);
@@ -194,10 +198,6 @@ public class PieceSystem extends IteratingSystem {
     }
 
     private void destroyPiece(PieceComponent pieceComponent) {
-        if(pieceComponent.piece instanceof CorePiece) {
-            Info.playerIsDead = true;
-        }
-
         Entity entity = (Entity) pieceComponent.fixture.getUserData();
         pieceComponent.fixture.getBody().destroyFixture(pieceComponent.fixture);
         engine.removeEntity(entity);
@@ -256,7 +256,7 @@ public class PieceSystem extends IteratingSystem {
 
         if(tractorBeamPieceComponentDest.state == 1) {
             Info.tempVector2 = pieceComponent.fixture.getBody().getLinearVelocity();
-            pieceComponent.fixture.getBody().setLinearVelocity(Info.tempVector2.x * .96f, Info.tempVector2.y * .96f);
+            pieceComponent.fixture.getBody().setLinearVelocity(Info.tempVector2.x * .8f, Info.tempVector2.y * .8f);
         } else if(tractorBeamPieceComponentDest.state == 2) {
             float angle = MathUtils.atan2( destPiece.pieceComponent.fixtureCenter.y - pieceComponent.fixtureCenter.y, destPiece.pieceComponent.fixtureCenter.x - pieceComponent.fixtureCenter.x);
             pieceComponent.fixture.getBody().applyForceToCenter(MathUtils.cos(angle) * tractorBeamPieceComponentDest.piece.force, MathUtils.sin(angle) * tractorBeamPieceComponentDest.piece.force, true);
@@ -265,7 +265,7 @@ public class PieceSystem extends IteratingSystem {
             if(Math.abs(Info.tempVector2.x) + Math.abs(Info.tempVector2.y) < 1) {
                 pieceComponent.fixture.getBody().setLinearVelocity(0, 0);
             } else {
-                pieceComponent.fixture.getBody().setLinearVelocity(Info.tempVector2.x * .96f, Info.tempVector2.y * .96f);
+                pieceComponent.fixture.getBody().setLinearVelocity(Info.tempVector2.x * .8f, Info.tempVector2.y * .8f);
             }
         }
     }

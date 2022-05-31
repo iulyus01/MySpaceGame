@@ -1,7 +1,6 @@
 package com.myspacegame.entities;
 
 import com.badlogic.gdx.Input;
-import com.myspacegame.Info;
 
 public class TractorBeamPiece extends Piece {
 
@@ -12,7 +11,7 @@ public class TractorBeamPiece extends Piece {
     public TractorBeamPiece(float radius) {
         super();
         this.radius2 = radius * radius;
-        this.force = 2;
+        this.force = 5;
         this.activateKey = Input.Keys.T;
     }
 

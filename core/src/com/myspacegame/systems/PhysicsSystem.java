@@ -1,14 +1,12 @@
 package com.myspacegame.systems;
 
 import com.badlogic.ashley.core.ComponentMapper;
-import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.physics.box2d.*;
 import com.myspacegame.Info;
 import com.myspacegame.components.BodyComponent;
-import com.myspacegame.components.PlayerComponent;
 import com.myspacegame.components.pieces.PieceComponent;
 
 public class PhysicsSystem extends IteratingSystem {
@@ -47,7 +45,6 @@ public class PhysicsSystem extends IteratingSystem {
     protected void processEntity(Entity entity, float deltaTime) {
         PieceComponent pieceComponent = pieceMapper.get(entity);
         if(pieceComponent != null) {
-            Info.computePieceFixtureBottomLeft(pieceComponent.fixtureBottomLeft, pieceComponent.fixture);
             Info.computePieceFixtureCenter(pieceComponent);
         }
 
