@@ -39,7 +39,7 @@ public class Info {
     */
 
     // strings
-    public static final String appName = "My Space Game";
+    public static final String appName = "Space Assemble";
     public static final String PIECE_TEXTURE_PATH = "images/pieces/";
 
     // misc
@@ -229,7 +229,6 @@ public class Info {
 
 
         activeMode = PlayerMode.MOVING;
-        testTexture = new TextureRegion(new Texture("badlogic.jpg"));
     }
 
     public static float[] edgesToNewVerticesArray(List<PieceEdge> edges, float multiplication) {

@@ -121,7 +121,6 @@ public class LoadingScreen implements Screen {
     private void queueAssets() {
         game.assetManager.load("ui/FlatSkin.json", Skin.class);
 
-        game.assetManager.load("badlogic.jpg", Texture.class);
         game.assetManager.load("images/background/SmallDot1.png", Texture.class);
         game.assetManager.load("images/background/SmallDot2.png", Texture.class);
         game.assetManager.load("images/background/SmallDot3.png", Texture.class);
