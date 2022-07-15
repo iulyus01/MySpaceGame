@@ -1,4 +1,4 @@
-# MySpaceGame
+# Space Assemble
 
 A game made in libGDX for my bacheslors degree
 
